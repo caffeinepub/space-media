@@ -1,0 +1,241 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: "Mona Sans";
+  src: url("/assets/fonts/Mona-Sans.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Bricolage Grotesque";
+  src: url("/assets/fonts/BricolageGrotesque[opsz,wdth,wght].woff2") format("woff2");
+  font-weight: 200 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Outfit";
+  src: url("/assets/fonts/Outfit[wght].woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@layer base {
+  :root {
+    --radius: 0.75rem;
+
+    /* Space Media - Nebula (default theme) */
+    --theme-accent: 0.65 0.25 290;
+    --theme-accent-2: 0.55 0.22 250;
+    --theme-bg: 0.08 0.02 270;
+    --theme-surface: 0.12 0.02 270;
+    --theme-text: 0.95 0.01 0;
+    --theme-gradient-from: oklch(0.12 0.06 290);
+    --theme-gradient-to: oklch(0.05 0.03 250);
+
+    /* Core design tokens - dark cinematic theme */
+    --background: 0.08 0.02 270;
+    --foreground: 0.95 0.01 0;
+    --card: 0.12 0.02 270;
+    --card-foreground: 0.95 0.01 0;
+    --popover: 0.14 0.02 270;
+    --popover-foreground: 0.95 0.01 0;
+    --primary: 0.65 0.25 290;
+    --primary-foreground: 0.98 0 0;
+    --secondary: 0.18 0.03 270;
+    --secondary-foreground: 0.85 0.01 0;
+    --muted: 0.16 0.02 270;
+    --muted-foreground: 0.58 0.02 270;
+    --accent: 0.65 0.25 290;
+    --accent-foreground: 0.98 0 0;
+    --destructive: 0.65 0.23 25;
+    --destructive-foreground: 0.98 0 0;
+    --border: 0.22 0.03 270;
+    --input: 0.18 0.03 270;
+    --ring: 0.65 0.25 290;
+    --chart-1: 0.65 0.25 290;
+    --chart-2: 0.60 0.22 250;
+    --chart-3: 0.55 0.20 210;
+    --chart-4: 0.70 0.18 170;
+    --chart-5: 0.75 0.20 130;
+    --sidebar: 0.10 0.02 270;
+    --sidebar-foreground: 0.90 0.01 0;
+    --sidebar-primary: 0.65 0.25 290;
+    --sidebar-primary-foreground: 0.98 0 0;
+    --sidebar-accent: 0.20 0.03 270;
+    --sidebar-accent-foreground: 0.90 0.01 0;
+    --sidebar-border: 0.22 0.03 270;
+    --sidebar-ring: 0.65 0.25 290;
+  }
+
+  /* Theme: Dark Space */
+  [data-theme="dark"] {
+    --theme-accent: 0.62 0.02 260;
+    --theme-accent-2: 0.45 0.01 260;
+    --theme-gradient-from: oklch(0.10 0.01 260);
+    --theme-gradient-to: oklch(0.04 0 0);
+    --primary: 0.75 0.02 260;
+    --accent: 0.75 0.02 260;
+    --ring: 0.75 0.02 260;
+  }
+
+  /* Theme: Aurora */
+  [data-theme="aurora"] {
+    --theme-accent: 0.68 0.20 168;
+    --theme-accent-2: 0.55 0.18 200;
+    --theme-gradient-from: oklch(0.12 0.06 168);
+    --theme-gradient-to: oklch(0.06 0.04 200);
+    --primary: 0.68 0.20 168;
+    --accent: 0.68 0.20 168;
+    --ring: 0.68 0.20 168;
+  }
+
+  /* Theme: Crimson */
+  [data-theme="crimson"] {
+    --theme-accent: 0.62 0.25 25;
+    --theme-accent-2: 0.45 0.22 15;
+    --theme-gradient-from: oklch(0.18 0.08 25);
+    --theme-gradient-to: oklch(0.06 0.04 15);
+    --primary: 0.62 0.25 25;
+    --accent: 0.62 0.25 25;
+    --ring: 0.62 0.25 25;
+  }
+
+  /* Theme: Ocean */
+  [data-theme="ocean"] {
+    --theme-accent: 0.62 0.22 210;
+    --theme-accent-2: 0.52 0.18 230;
+    --theme-gradient-from: oklch(0.14 0.07 210);
+    --theme-gradient-to: oklch(0.06 0.05 230);
+    --primary: 0.62 0.22 210;
+    --accent: 0.62 0.22 210;
+    --ring: 0.62 0.22 210;
+  }
+
+  /* Theme: Desert */
+  [data-theme="desert"] {
+    --theme-accent: 0.70 0.18 60;
+    --theme-accent-2: 0.58 0.16 40;
+    --theme-gradient-from: oklch(0.18 0.07 60);
+    --theme-gradient-to: oklch(0.10 0.04 40);
+    --primary: 0.70 0.18 60;
+    --accent: 0.70 0.18 60;
+    --ring: 0.70 0.18 60;
+  }
+
+  /* Theme: Arctic */
+  [data-theme="arctic"] {
+    --theme-accent: 0.72 0.12 220;
+    --theme-accent-2: 0.60 0.10 240;
+    --theme-gradient-from: oklch(0.18 0.05 220);
+    --theme-gradient-to: oklch(0.10 0.03 240);
+    --primary: 0.72 0.12 220;
+    --accent: 0.72 0.12 220;
+    --ring: 0.72 0.12 220;
+  }
+
+  /* Theme: Neon */
+  [data-theme="neon"] {
+    --theme-accent: 0.72 0.30 330;
+    --theme-accent-2: 0.68 0.28 195;
+    --theme-gradient-from: oklch(0.14 0.08 330);
+    --theme-gradient-to: oklch(0.08 0.06 195);
+    --primary: 0.72 0.30 330;
+    --accent: 0.72 0.30 330;
+    --ring: 0.72 0.30 330;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: "Outfit", "Mona Sans", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow: hidden;
+    height: 100dvh;
+  }
+
+  #root {
+    height: 100dvh;
+    overflow: hidden;
+  }
+}
+
+@layer utilities {
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Carousel scroll snap */
+  .snap-x-mandatory {
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .snap-start {
+    scroll-snap-align: start;
+  }
+
+  /* Safe area padding */
+  .pb-safe {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+
+  .pt-safe {
+    padding-top: max(0px, env(safe-area-inset-top));
+  }
+
+  /* Music tab: light theme override */
+  .music-light {
+    --background: 0.97 0 0;
+    --foreground: 0.12 0.01 270;
+    --card: 1 0 0;
+    --card-foreground: 0.12 0.01 270;
+    --muted: 0.93 0.005 270;
+    --muted-foreground: 0.45 0.01 270;
+    --border: 0.88 0.01 270;
+    background-color: oklch(var(--background)) !important;
+    color: oklch(var(--foreground)) !important;
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    background: linear-gradient(135deg, oklch(var(--theme-accent)), oklch(var(--theme-accent-2)));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Thin progress bar */
+  .progress-thin {
+    height: 2px;
+  }
+
+  /* Video poster aspect ratio */
+  .poster-ratio {
+    aspect-ratio: 2/3;
+  }
+
+  /* Album art ratio */
+  .album-ratio {
+    aspect-ratio: 1/1;
+  }
+}

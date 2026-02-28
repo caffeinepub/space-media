@@ -15,6 +15,13 @@ export interface AppSettings {
   'downloadQuality' : string,
   'passengerId' : string,
 }
+export interface AudioTrack {
+  'id' : string,
+  'audioLabel' : string,
+  'langCode' : string,
+  'language' : string,
+  'isDefault' : boolean,
+}
 export interface DownloadedItem {
   'id' : string,
   'title' : string,
@@ -36,20 +43,78 @@ export interface Passenger {
   'tripId' : string,
   'role' : string,
 }
+export interface StudioMusic {
+  'id' : string,
+  'title' : string,
+  'duration' : string,
+  'album' : string,
+  'isPublished' : boolean,
+  'language' : string,
+  'genre' : string,
+  'artist' : string,
+  'coverArt' : string,
+  'dateAdded' : bigint,
+}
+export interface StudioVideo {
+  'id' : string,
+  'title' : string,
+  'audioTracks' : Array<AudioTrack>,
+  'duration' : string,
+  'hlsMasterUrl' : string,
+  'processingStatus' : string,
+  'isPublished' : boolean,
+  'ageRating' : string,
+  'description' : string,
+  'genre' : string,
+  'posterUrl' : string,
+  'primaryLanguage' : string,
+  'dateAdded' : bigint,
+}
 export interface _SERVICE {
+  'addAudioTrack' : ActorMethod<[string, AudioTrack], undefined>,
   'addDownload' : ActorMethod<[DownloadedItem], undefined>,
   'createPassenger' : ActorMethod<[string, string, string, string], undefined>,
+  'createStudioMusic' : ActorMethod<[StudioMusic], undefined>,
+  'createStudioVideo' : ActorMethod<[StudioVideo], undefined>,
   'deleteDownload' : ActorMethod<[string], undefined>,
+  'deleteStudioMusic' : ActorMethod<[string], undefined>,
+  'deleteStudioVideo' : ActorMethod<[string], undefined>,
   'getDownloads' : ActorMethod<[string], Array<DownloadedItem>>,
   'getPassenger' : ActorMethod<[string], Passenger>,
   'getSettings' : ActorMethod<[string], [] | [AppSettings]>,
+  'getStudioMusic' : ActorMethod<[string], StudioMusic>,
+  'getStudioVideo' : ActorMethod<[string], StudioVideo>,
   'listPassengers' : ActorMethod<[], Array<Passenger>>,
+  'listStudioMusic' : ActorMethod<[], Array<StudioMusic>>,
+  'listStudioVideos' : ActorMethod<[], Array<StudioVideo>>,
+  'removeAudioTrack' : ActorMethod<[string, string], undefined>,
   'renewDownload' : ActorMethod<[string, bigint], undefined>,
   'saveSettings' : ActorMethod<[string, string, string], undefined>,
   'searchDownloads' : ActorMethod<
     [string, string, [] | [string]],
     Array<DownloadedItem>
   >,
+  'setDefaultAudioTrack' : ActorMethod<[string, string], undefined>,
+  'updateStudioMusic' : ActorMethod<
+    [string, string, string, string, string, string, string, boolean],
+    undefined
+  >,
+  'updateStudioVideo' : ActorMethod<
+    [
+      string,
+      string,
+      string,
+      string,
+      string,
+      string,
+      string,
+      string,
+      string,
+      boolean,
+    ],
+    undefined
+  >,
+  'validateManagerKey' : ActorMethod<[string], boolean>,
   'validateStaffKey' : ActorMethod<[string], boolean>,
 }
 export declare const idlService: IDL.ServiceClass;

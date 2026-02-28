@@ -3,9 +3,12 @@ import Text "mo:core/Text";
 import Array "mo:core/Array";
 import Time "mo:core/Time";
 import Iter "mo:core/Iter";
+import Runtime "mo:core/Runtime";
 import Order "mo:core/Order";
 import List "mo:core/List";
-import Runtime "mo:core/Runtime";
+
+import Nat "mo:core/Nat";
+
 
 actor {
   public type Passenger = {
@@ -37,6 +40,43 @@ actor {
     downloadQuality : Text;
   };
 
+  public type AudioTrack = {
+    id : Text;
+    language : Text;
+    langCode : Text;
+    audioLabel : Text;
+    isDefault : Bool;
+  };
+
+  public type StudioVideo = {
+    id : Text;
+    title : Text;
+    description : Text;
+    genre : Text;
+    ageRating : Text;
+    primaryLanguage : Text;
+    posterUrl : Text;
+    hlsMasterUrl : Text;
+    processingStatus : Text;
+    audioTracks : [AudioTrack];
+    dateAdded : Int;
+    duration : Text;
+    isPublished : Bool;
+  };
+
+  public type StudioMusic = {
+    id : Text;
+    title : Text;
+    artist : Text;
+    album : Text;
+    genre : Text;
+    language : Text;
+    coverArt : Text;
+    dateAdded : Int;
+    duration : Text;
+    isPublished : Bool;
+  };
+
   module DownloadedItem {
     public func compare(a : DownloadedItem, b : DownloadedItem) : Order.Order {
       Text.compare(a.title, b.title);
@@ -46,7 +86,10 @@ actor {
   let passengers = Map.empty<Text, Passenger>();
   let downloads = Map.empty<Text, DownloadedItem>();
   let settings = Map.empty<Text, AppSettings>();
+  let studioVideos = Map.empty<Text, StudioVideo>();
+  let studioMusic = Map.empty<Text, StudioMusic>();
   let staffSecretKey = "SPACE2024";
+  let managerKey = "MANAGER2024";
 
   public shared ({ caller }) func createPassenger(id : Text, name : Text, role : Text, tripId : Text) : async () {
     let passenger : Passenger = {
@@ -96,6 +139,10 @@ actor {
     key == staffSecretKey;
   };
 
+  public shared ({ caller }) func validateManagerKey(key : Text) : async Bool {
+    key == managerKey;
+  };
+
   public query ({ caller }) func getSettings(passengerId : Text) : async ?AppSettings {
     settings.get(passengerId);
   };
@@ -135,5 +182,145 @@ actor {
     };
 
     resultsList.toArray().sort();
+  };
+
+  // Studio Video Management
+  public shared ({ caller }) func createStudioVideo(video : StudioVideo) : async () {
+    studioVideos.add(video.id, video);
+  };
+
+  public query ({ caller }) func getStudioVideo(id : Text) : async StudioVideo {
+    switch (studioVideos.get(id)) {
+      case (null) { Runtime.trap("Studio video does not exist") };
+      case (?video) { video };
+    };
+  };
+
+  public query ({ caller }) func listStudioVideos() : async [StudioVideo] {
+    let iter = studioVideos.values();
+    iter.toArray();
+  };
+
+  public shared ({ caller }) func updateStudioVideo(
+    id : Text,
+    title : Text,
+    description : Text,
+    genre : Text,
+    ageRating : Text,
+    primaryLanguage : Text,
+    posterUrl : Text,
+    hlsMasterUrl : Text,
+    processingStatus : Text,
+    isPublished : Bool,
+  ) : async () {
+    switch (studioVideos.get(id)) {
+      case (null) { Runtime.trap("Studio video does not exist") };
+      case (?video) {
+        let updatedVideo = {
+          video with
+          title;
+          description;
+          genre;
+          ageRating;
+          primaryLanguage;
+          posterUrl;
+          hlsMasterUrl;
+          processingStatus;
+          isPublished;
+        };
+        studioVideos.add(id, updatedVideo);
+      };
+    };
+  };
+
+  public shared ({ caller }) func deleteStudioVideo(id : Text) : async () {
+    studioVideos.remove(id);
+  };
+
+  public shared ({ caller }) func addAudioTrack(videoId : Text, track : AudioTrack) : async () {
+    switch (studioVideos.get(videoId)) {
+      case (null) { Runtime.trap("Studio video does not exist") };
+      case (?video) {
+        let updatedTracks = video.audioTracks.concat([track]);
+        let updatedVideo = { video with audioTracks = updatedTracks };
+        studioVideos.add(videoId, updatedVideo);
+      };
+    };
+  };
+
+  public shared ({ caller }) func removeAudioTrack(videoId : Text, trackId : Text) : async () {
+    switch (studioVideos.get(videoId)) {
+      case (null) { Runtime.trap("Studio video does not exist") };
+      case (?video) {
+        let filteredTracks = video.audioTracks.filter(func(track) { track.id != trackId });
+        let updatedVideo = { video with audioTracks = filteredTracks };
+        studioVideos.add(videoId, updatedVideo);
+      };
+    };
+  };
+
+  public shared ({ caller }) func setDefaultAudioTrack(videoId : Text, trackId : Text) : async () {
+    switch (studioVideos.get(videoId)) {
+      case (null) { Runtime.trap("Studio video does not exist") };
+      case (?video) {
+        let updatedTracks = video.audioTracks.map(
+          func(track) {
+            if (track.id == trackId) { { track with isDefault = true } } else {
+              { track with isDefault = false };
+            };
+          }
+        );
+        let updatedVideo = { video with audioTracks = updatedTracks };
+        studioVideos.add(videoId, updatedVideo);
+      };
+    };
+  };
+
+  // Studio Music Management
+  public shared ({ caller }) func createStudioMusic(music : StudioMusic) : async () {
+    studioMusic.add(music.id, music);
+  };
+
+  public query ({ caller }) func getStudioMusic(id : Text) : async StudioMusic {
+    switch (studioMusic.get(id)) {
+      case (null) { Runtime.trap("Studio music does not exist") };
+      case (?music) { music };
+    };
+  };
+
+  public query ({ caller }) func listStudioMusic() : async [StudioMusic] {
+    studioMusic.values().toArray();
+  };
+
+  public shared ({ caller }) func updateStudioMusic(
+    id : Text,
+    title : Text,
+    artist : Text,
+    album : Text,
+    genre : Text,
+    language : Text,
+    coverArt : Text,
+    isPublished : Bool,
+  ) : async () {
+    switch (studioMusic.get(id)) {
+      case (null) { Runtime.trap("Studio music does not exist") };
+      case (?music) {
+        let updatedMusic = {
+          music with
+          title;
+          artist;
+          album;
+          genre;
+          language;
+          coverArt;
+          isPublished;
+        };
+        studioMusic.add(id, updatedMusic);
+      };
+    };
+  };
+
+  public shared ({ caller }) func deleteStudioMusic(id : Text) : async () {
+    studioMusic.remove(id);
   };
 };

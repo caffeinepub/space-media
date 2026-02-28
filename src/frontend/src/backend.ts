@@ -96,6 +96,11 @@ export interface Passenger {
     tripId: string;
     role: string;
 }
+export interface AppSettings {
+    theme: string;
+    downloadQuality: string;
+    passengerId: string;
+}
 export interface DownloadedItem {
     id: string;
     title: string;
@@ -110,27 +115,84 @@ export interface DownloadedItem {
     mediaType: string;
     artist: string;
 }
-export interface AppSettings {
-    theme: string;
-    downloadQuality: string;
-    passengerId: string;
+export interface AudioTrack {
+    id: string;
+    audioLabel: string;
+    langCode: string;
+    language: string;
+    isDefault: boolean;
+}
+export interface StudioMusic {
+    id: string;
+    title: string;
+    duration: string;
+    album: string;
+    isPublished: boolean;
+    language: string;
+    genre: string;
+    artist: string;
+    coverArt: string;
+    dateAdded: bigint;
+}
+export interface StudioVideo {
+    id: string;
+    title: string;
+    audioTracks: Array<AudioTrack>;
+    duration: string;
+    hlsMasterUrl: string;
+    processingStatus: string;
+    isPublished: boolean;
+    ageRating: string;
+    description: string;
+    genre: string;
+    posterUrl: string;
+    primaryLanguage: string;
+    dateAdded: bigint;
 }
 export interface backendInterface {
+    addAudioTrack(videoId: string, track: AudioTrack): Promise<void>;
     addDownload(item: DownloadedItem): Promise<void>;
     createPassenger(id: string, name: string, role: string, tripId: string): Promise<void>;
+    createStudioMusic(music: StudioMusic): Promise<void>;
+    createStudioVideo(video: StudioVideo): Promise<void>;
     deleteDownload(id: string): Promise<void>;
+    deleteStudioMusic(id: string): Promise<void>;
+    deleteStudioVideo(id: string): Promise<void>;
     getDownloads(passengerId: string): Promise<Array<DownloadedItem>>;
     getPassenger(passengerId: string): Promise<Passenger>;
     getSettings(passengerId: string): Promise<AppSettings | null>;
+    getStudioMusic(id: string): Promise<StudioMusic>;
+    getStudioVideo(id: string): Promise<StudioVideo>;
     listPassengers(): Promise<Array<Passenger>>;
+    listStudioMusic(): Promise<Array<StudioMusic>>;
+    listStudioVideos(): Promise<Array<StudioVideo>>;
+    removeAudioTrack(videoId: string, trackId: string): Promise<void>;
     renewDownload(id: string, newExpiresAt: bigint): Promise<void>;
     saveSettings(passengerId: string, theme: string, downloadQuality: string): Promise<void>;
     searchDownloads(passengerId: string, searchTerm: string, typeFilter: string | null): Promise<Array<DownloadedItem>>;
+    setDefaultAudioTrack(videoId: string, trackId: string): Promise<void>;
+    updateStudioMusic(id: string, title: string, artist: string, album: string, genre: string, language: string, coverArt: string, isPublished: boolean): Promise<void>;
+    updateStudioVideo(id: string, title: string, description: string, genre: string, ageRating: string, primaryLanguage: string, posterUrl: string, hlsMasterUrl: string, processingStatus: string, isPublished: boolean): Promise<void>;
+    validateManagerKey(key: string): Promise<boolean>;
     validateStaffKey(key: string): Promise<boolean>;
 }
 import type { AppSettings as _AppSettings } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
+    async addAudioTrack(arg0: string, arg1: AudioTrack): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.addAudioTrack(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.addAudioTrack(arg0, arg1);
+            return result;
+        }
+    }
     async addDownload(arg0: DownloadedItem): Promise<void> {
         if (this.processError) {
             try {
@@ -159,6 +221,34 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async createStudioMusic(arg0: StudioMusic): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.createStudioMusic(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.createStudioMusic(arg0);
+            return result;
+        }
+    }
+    async createStudioVideo(arg0: StudioVideo): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.createStudioVideo(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.createStudioVideo(arg0);
+            return result;
+        }
+    }
     async deleteDownload(arg0: string): Promise<void> {
         if (this.processError) {
             try {
@@ -170,6 +260,34 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.deleteDownload(arg0);
+            return result;
+        }
+    }
+    async deleteStudioMusic(arg0: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.deleteStudioMusic(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.deleteStudioMusic(arg0);
+            return result;
+        }
+    }
+    async deleteStudioVideo(arg0: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.deleteStudioVideo(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.deleteStudioVideo(arg0);
             return result;
         }
     }
@@ -215,6 +333,34 @@ export class Backend implements backendInterface {
             return from_candid_opt_n1(this._uploadFile, this._downloadFile, result);
         }
     }
+    async getStudioMusic(arg0: string): Promise<StudioMusic> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getStudioMusic(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getStudioMusic(arg0);
+            return result;
+        }
+    }
+    async getStudioVideo(arg0: string): Promise<StudioVideo> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getStudioVideo(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getStudioVideo(arg0);
+            return result;
+        }
+    }
     async listPassengers(): Promise<Array<Passenger>> {
         if (this.processError) {
             try {
@@ -226,6 +372,48 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.listPassengers();
+            return result;
+        }
+    }
+    async listStudioMusic(): Promise<Array<StudioMusic>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.listStudioMusic();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.listStudioMusic();
+            return result;
+        }
+    }
+    async listStudioVideos(): Promise<Array<StudioVideo>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.listStudioVideos();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.listStudioVideos();
+            return result;
+        }
+    }
+    async removeAudioTrack(arg0: string, arg1: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.removeAudioTrack(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.removeAudioTrack(arg0, arg1);
             return result;
         }
     }
@@ -268,6 +456,62 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.searchDownloads(arg0, arg1, to_candid_opt_n2(this._uploadFile, this._downloadFile, arg2));
+            return result;
+        }
+    }
+    async setDefaultAudioTrack(arg0: string, arg1: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.setDefaultAudioTrack(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.setDefaultAudioTrack(arg0, arg1);
+            return result;
+        }
+    }
+    async updateStudioMusic(arg0: string, arg1: string, arg2: string, arg3: string, arg4: string, arg5: string, arg6: string, arg7: boolean): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateStudioMusic(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateStudioMusic(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
+            return result;
+        }
+    }
+    async updateStudioVideo(arg0: string, arg1: string, arg2: string, arg3: string, arg4: string, arg5: string, arg6: string, arg7: string, arg8: string, arg9: boolean): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateStudioVideo(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateStudioVideo(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
+            return result;
+        }
+    }
+    async validateManagerKey(arg0: string): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.validateManagerKey(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.validateManagerKey(arg0);
             return result;
         }
     }

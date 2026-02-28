@@ -21,14 +21,16 @@ export default function MiniPlayer({ onExpand }: MiniPlayerProps) {
       animate={{ y: 0, opacity: 1 }}
       exit={{ y: 60, opacity: 0 }}
       transition={{ type: "spring", stiffness: 350, damping: 35 }}
-      className="relative overflow-hidden"
+      // On md+, the mini player still shows above the bottom area
+      // It's hidden within the sidebar layout since sidebar handles now-playing
+      className="relative overflow-hidden md:mx-2 md:mb-1 md:rounded-xl"
       style={{
-        backgroundColor: "oklch(0.14 0.03 290)",
-        borderTop: "1px solid oklch(0.22 0.03 290)",
+        backgroundColor: "oklch(var(--card))",
+        borderTop: "1px solid oklch(var(--border))",
       }}
     >
       {/* Progress indicator */}
-      <div className="absolute top-0 left-0 right-0 h-0.5 bg-white/10">
+      <div className="absolute top-0 left-0 right-0 h-0.5 bg-border">
         <div
           className="h-full transition-all duration-1000"
           style={{
@@ -42,7 +44,7 @@ export default function MiniPlayer({ onExpand }: MiniPlayerProps) {
       <button
         type="button"
         onClick={onExpand}
-        className="w-full flex items-center gap-3 px-4 py-3 focus:outline-none"
+        className="w-full flex items-center gap-3 px-4 py-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
       >
         {/* Album art */}
         <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 shadow-md">
@@ -71,7 +73,7 @@ export default function MiniPlayer({ onExpand }: MiniPlayerProps) {
               e.stopPropagation();
               isPlaying ? pauseMusic() : resumeMusic();
             }}
-            className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors text-foreground"
+            className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-secondary transition-colors text-foreground focus-visible:ring-2 focus-visible:ring-primary"
             aria-label={isPlaying ? "Pause" : "Play"}
           >
             {isPlaying ? (
@@ -86,7 +88,7 @@ export default function MiniPlayer({ onExpand }: MiniPlayerProps) {
               e.stopPropagation();
               nextTrack();
             }}
-            className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors text-foreground"
+            className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-secondary transition-colors text-foreground focus-visible:ring-2 focus-visible:ring-primary"
             aria-label="Next track"
           >
             <SkipForward className="w-4 h-4 fill-current" />

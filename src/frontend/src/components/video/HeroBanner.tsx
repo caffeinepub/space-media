@@ -14,8 +14,12 @@ export default function HeroBanner({ video, onMoreInfo }: HeroBannerProps) {
 
   return (
     <div
-      className="relative w-full"
-      style={{ height: "58vw", minHeight: 220, maxHeight: 320 }}
+      className="relative w-full
+        h-[clamp(280px,68vw,340px)]
+        md:h-[clamp(320px,45vw,420px)]
+        lg:h-[clamp(400px,42vw,520px)]
+        xl:h-[clamp(500px,40vw,620px)]
+        2xl:h-[clamp(560px,38vw,700px)]"
     >
       {/* Backdrop image */}
       <img
@@ -25,33 +29,45 @@ export default function HeroBanner({ video, onMoreInfo }: HeroBannerProps) {
         loading="eager"
       />
 
-      {/* Gradient overlay */}
+      {/* Top gradient — keeps top bar text readable over the image */}
       <div
         className="absolute inset-0"
         style={{
           background:
-            "linear-gradient(to bottom, transparent 10%, oklch(var(--background) / 0.3) 50%, oklch(var(--background)) 100%)",
-        }}
-      />
-      <div
-        className="absolute inset-0"
-        style={{
-          background:
-            "linear-gradient(to right, oklch(var(--background) / 0.8), transparent 60%)",
+            "linear-gradient(to bottom, oklch(var(--background) / 0.65) 0%, transparent 38%)",
         }}
       />
 
-      {/* Content */}
-      <div className="absolute bottom-0 left-0 right-0 px-4 pb-4">
+      {/* Bottom gradient — fades image into content below */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(to bottom, transparent 20%, oklch(var(--background) / 0.3) 55%, oklch(var(--background)) 100%)",
+        }}
+      />
+
+      {/* Side gradient — improves text legibility on left */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(to right, oklch(var(--background) / 0.85), transparent 65%)",
+        }}
+      />
+
+      {/* Content — pt-14 ensures buttons stay below the overlaid top bar on mobile */}
+      <div className="absolute inset-0 flex flex-col justify-end px-4 pb-5 pt-14 md:px-8 md:pb-8 md:pt-0 lg:px-10 lg:pb-10 xl:px-14 xl:pb-12">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
+          className="max-w-xl xl:max-w-2xl"
         >
           {/* Genre badge */}
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-2 mb-2 xl:mb-3">
             <span
-              className="text-xs font-bold px-2 py-0.5 rounded-full"
+              className="text-xs xl:text-sm font-bold px-2.5 py-0.5 rounded-full"
               style={{
                 background:
                   "linear-gradient(90deg, oklch(var(--theme-accent)), oklch(var(--theme-accent-2)))",
@@ -60,45 +76,58 @@ export default function HeroBanner({ video, onMoreInfo }: HeroBannerProps) {
             >
               Featured
             </span>
-            <span className="text-xs text-white/70">{video.genre}</span>
+            <span className="text-xs xl:text-sm text-white/70">
+              {video.genre}
+            </span>
           </div>
 
           {/* Title */}
-          <h2 className="text-2xl font-bold text-white font-display leading-tight mb-1">
+          <h2 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl 2xl:text-6xl font-bold text-white font-display leading-tight mb-1 xl:mb-2">
             {video.title}
           </h2>
 
+          {/* Description — visible on lg+ */}
+          <p className="hidden lg:block text-sm xl:text-base text-white/70 leading-relaxed mb-3 line-clamp-2">
+            {video.description}
+          </p>
+
           {/* Meta */}
-          <div className="flex items-center gap-2 text-xs text-white/60 mb-3">
+          <div className="flex items-center gap-2 text-xs md:text-sm xl:text-base text-white/60 mb-3 xl:mb-5">
             <span>{video.year}</span>
             <span>·</span>
             <span>{video.rating}</span>
             <span>·</span>
             <span>{video.runtime}</span>
+            {video.audioTracks && video.audioTracks.length > 1 && (
+              <>
+                <span>·</span>
+                <span className="text-purple-300">
+                  {video.audioTracks.length} languages
+                </span>
+              </>
+            )}
           </div>
 
           {/* Action buttons */}
-          <div className="flex gap-2">
+          <div className="flex gap-2 xl:gap-3">
             <Button
-              size="sm"
               onClick={() => playVideo(video)}
-              className="flex-1 h-9 font-semibold text-sm gap-1.5"
+              className="h-9 md:h-10 xl:h-12 px-5 xl:px-7 font-semibold gap-1.5 focus-visible:ring-2 focus-visible:ring-white text-sm xl:text-base"
               style={{
                 background: "rgba(255,255,255,0.95)",
                 color: "#0a0a0a",
                 border: "none",
               }}
             >
-              <Play className="w-3.5 h-3.5 fill-current" />
+              <Play className="w-3.5 h-3.5 xl:w-4 xl:h-4 fill-current" />
               Play
             </Button>
             <Button
-              size="sm"
               onClick={() => onMoreInfo(video)}
               variant="outline"
-              className="flex-1 h-9 font-semibold text-sm gap-1.5 bg-white/10 border-white/20 text-white backdrop-blur-sm hover:bg-white/20"
+              className="h-9 md:h-10 xl:h-12 px-5 xl:px-7 font-semibold gap-1.5 bg-white/10 border-white/20 text-white backdrop-blur-sm hover:bg-white/20 focus-visible:ring-2 focus-visible:ring-white text-sm xl:text-base"
             >
-              <Info className="w-3.5 h-3.5" />
+              <Info className="w-3.5 h-3.5 xl:w-4 xl:h-4" />
               More Info
             </Button>
           </div>

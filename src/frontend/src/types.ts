@@ -1,6 +1,6 @@
 // ─── Passenger / Auth ────────────────────────────────────────────────────────
 
-export type PassengerRole = "tourist" | "scientist";
+export type PassengerRole = "tourist" | "scientist" | "staff" | "manager";
 
 export interface Passenger {
   id: string;
@@ -12,6 +12,20 @@ export interface Passenger {
 }
 
 // ─── Media Content ───────────────────────────────────────────────────────────
+
+export interface AudioTrack {
+  id: string;
+  language: string;
+  langCode: string;
+  audioLabel: string; // "Stereo" | "5.1" | "Commentary"
+  isDefault: boolean;
+}
+
+export interface SubtitleTrack {
+  id: string;
+  language: string;
+  langCode: string;
+}
 
 export interface VideoContent {
   id: string;
@@ -27,6 +41,10 @@ export interface VideoContent {
   subtitles: string[];
   resumePosition?: number; // seconds
   tags?: string[];
+  // HLS multi-audio fields
+  hlsMasterUrl?: string;
+  audioTracks?: AudioTrack[];
+  defaultAudioLang?: string;
 }
 
 export interface MusicTrack {
@@ -64,6 +82,38 @@ export interface Artist {
   imageUrl: string;
   genre: string;
   followerCount: number;
+}
+
+// ─── Studio ───────────────────────────────────────────────────────────────────
+
+export interface StudioVideo {
+  id: string;
+  title: string;
+  description: string;
+  genre: string;
+  ageRating: string;
+  primaryLanguage: string;
+  posterUrl: string;
+  hlsMasterUrl: string;
+  processingStatus: "processing" | "ready" | "failed" | "unpublished";
+  audioTracks: AudioTrack[];
+  subtitles: SubtitleTrack[];
+  dateAdded: number;
+  duration: string;
+  isPublished: boolean;
+}
+
+export interface StudioMusic {
+  id: string;
+  title: string;
+  artist: string;
+  album: string;
+  genre: string;
+  language: string;
+  coverArt: string;
+  dateAdded: number;
+  duration: string;
+  isPublished: boolean;
 }
 
 // ─── Downloads ───────────────────────────────────────────────────────────────
@@ -130,6 +180,7 @@ export interface VideoPlayerState {
   isPlaying: boolean;
   progress: number; // seconds
   subtitleLang: string;
+  audioLang: string; // currently selected audio language code
 }
 
 // ─── Theme Definition ─────────────────────────────────────────────────────────
@@ -143,4 +194,4 @@ export interface ThemeDefinition {
 
 // ─── Navigation ──────────────────────────────────────────────────────────────
 
-export type TabId = "video" | "music" | "downloads" | "profile";
+export type TabId = "video" | "music" | "downloads" | "studio" | "profile";

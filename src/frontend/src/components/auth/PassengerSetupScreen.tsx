@@ -16,18 +16,36 @@ import {
   CheckCircle,
   ChevronLeft,
   Rocket,
+  Shield,
   User,
   UserSearch,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
-import { v4 as uuidv4 } from "uuid";
+function uuidv4(): string {
+  return crypto.randomUUID();
+}
 
 interface PassengerSetupScreenProps {
   onBack: () => void;
 }
 
 type Mode = "create" | "find";
+
+const MANAGER_PASSPHRASE = "MANAGER2024";
+
+function getRoleBadgeClass(role: PassengerRole): string {
+  switch (role) {
+    case "manager":
+      return "bg-purple-500/20 text-purple-400";
+    case "staff":
+      return "bg-green-500/20 text-green-400";
+    case "scientist":
+      return "bg-blue-500/20 text-blue-400";
+    default:
+      return "bg-amber-500/20 text-amber-400";
+  }
+}
 
 export default function PassengerSetupScreen({
   onBack,
@@ -40,6 +58,7 @@ export default function PassengerSetupScreen({
   const [name, setName] = useState("");
   const [passportId, setPassportId] = useState("");
   const [tripId, setTripId] = useState("");
+  const [managerPassphrase, setManagerPassphrase] = useState("");
 
   // Find mode fields
   const [findId, setFindId] = useState("");
@@ -59,6 +78,16 @@ export default function PassengerSetupScreen({
     if (!tripId.trim()) {
       setError("Trip ID is required.");
       return;
+    }
+    if (role === "manager") {
+      if (!managerPassphrase.trim()) {
+        setError("Manager passphrase is required.");
+        return;
+      }
+      if (managerPassphrase.trim() !== MANAGER_PASSPHRASE) {
+        setError("Invalid manager passphrase. Please check and try again.");
+        return;
+      }
     }
 
     setLoading(true);
@@ -208,7 +237,11 @@ export default function PassengerSetupScreen({
               </Label>
               <Select
                 value={role}
-                onValueChange={(v) => setRole(v as PassengerRole)}
+                onValueChange={(v) => {
+                  setRole(v as PassengerRole);
+                  setError("");
+                  setManagerPassphrase("");
+                }}
               >
                 <SelectTrigger className="h-12 bg-secondary border-border">
                   <SelectValue />
@@ -224,9 +257,30 @@ export default function PassengerSetupScreen({
                   </SelectItem>
                   <SelectItem value="scientist">
                     <div>
-                      <div className="font-semibold">Scientist</div>
+                      <div className="font-semibold">
+                        Scientist / Researcher
+                      </div>
                       <div className="text-xs text-muted-foreground">
                         180-day offline license
+                      </div>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="staff">
+                    <div>
+                      <div className="font-semibold">Staff</div>
+                      <div className="text-xs text-muted-foreground">
+                        180-day offline license
+                      </div>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="manager">
+                    <div>
+                      <div className="font-semibold flex items-center gap-1.5">
+                        Manager
+                        <Shield className="w-3 h-3 text-purple-400" />
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        Full access + Studio
                       </div>
                     </div>
                   </SelectItem>
@@ -283,6 +337,42 @@ export default function PassengerSetupScreen({
                 autoCapitalize="characters"
               />
             </div>
+
+            {/* Manager passphrase — only shows when manager role selected */}
+            <AnimatePresence>
+              {role === "manager" && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="space-y-2 overflow-hidden"
+                >
+                  <Label
+                    htmlFor="managerPass"
+                    className="text-sm text-purple-400 flex items-center gap-1.5"
+                  >
+                    <Shield className="w-3.5 h-3.5" />
+                    Manager Passphrase{" "}
+                    <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="managerPass"
+                    type="password"
+                    value={managerPassphrase}
+                    onChange={(e) => {
+                      setManagerPassphrase(e.target.value);
+                      setError("");
+                    }}
+                    placeholder="Enter manager passphrase"
+                    className="h-12 bg-secondary border-purple-500/30 focus:border-purple-500/60 text-base"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Required for Manager role access.
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {error && (
               <div className="flex items-center gap-2 text-sm text-destructive">
@@ -392,11 +482,7 @@ export default function PassengerSetupScreen({
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Role</span>
                       <span
-                        className={`font-semibold capitalize px-2 py-0.5 rounded-full text-xs ${
-                          foundPassenger.role === "scientist"
-                            ? "bg-blue-500/20 text-blue-400"
-                            : "bg-amber-500/20 text-amber-400"
-                        }`}
+                        className={`font-semibold capitalize px-2 py-0.5 rounded-full text-xs ${getRoleBadgeClass(foundPassenger.role)}`}
                       >
                         {foundPassenger.role}
                       </span>

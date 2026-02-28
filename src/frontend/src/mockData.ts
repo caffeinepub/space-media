@@ -3,6 +3,8 @@ import type {
   Artist,
   MusicTrack,
   Playlist,
+  StudioMusic,
+  StudioVideo,
   VideoContent,
 } from "./types";
 
@@ -24,6 +26,31 @@ export const mockVideos: VideoContent[] = [
     subtitles: ["English", "Spanish", "French", "German"],
     resumePosition: 1823,
     tags: ["space", "exploration", "aliens"],
+    hlsMasterUrl: "/media/videos/v1/master.m3u8",
+    defaultAudioLang: "en",
+    audioTracks: [
+      {
+        id: "at1",
+        language: "English",
+        langCode: "en",
+        audioLabel: "Stereo",
+        isDefault: true,
+      },
+      {
+        id: "at2",
+        language: "Spanish",
+        langCode: "es",
+        audioLabel: "Stereo",
+        isDefault: false,
+      },
+      {
+        id: "at3",
+        language: "French",
+        langCode: "fr",
+        audioLabel: "Stereo",
+        isDefault: false,
+      },
+    ],
   },
   {
     id: "v2",
@@ -40,6 +67,24 @@ export const mockVideos: VideoContent[] = [
     subtitles: ["English", "Japanese", "Korean"],
     resumePosition: 0,
     tags: ["survival", "space", "thriller"],
+    hlsMasterUrl: "/media/videos/v2/master.m3u8",
+    defaultAudioLang: "en",
+    audioTracks: [
+      {
+        id: "at4",
+        language: "English",
+        langCode: "en",
+        audioLabel: "Stereo",
+        isDefault: true,
+      },
+      {
+        id: "at5",
+        language: "Japanese",
+        langCode: "ja",
+        audioLabel: "Stereo",
+        isDefault: false,
+      },
+    ],
   },
   {
     id: "v3",
@@ -55,6 +100,24 @@ export const mockVideos: VideoContent[] = [
     backdropUrl: "https://picsum.photos/seed/v3mars_back/800/450",
     subtitles: ["English", "Spanish"],
     tags: ["mars", "documentary", "science"],
+    hlsMasterUrl: "/media/videos/v3/master.m3u8",
+    defaultAudioLang: "en",
+    audioTracks: [
+      {
+        id: "at6",
+        language: "English",
+        langCode: "en",
+        audioLabel: "Stereo",
+        isDefault: true,
+      },
+      {
+        id: "at7",
+        language: "Spanish",
+        langCode: "es",
+        audioLabel: "Stereo",
+        isDefault: false,
+      },
+    ],
   },
   {
     id: "v4",
@@ -519,3 +582,145 @@ export function formatFollowers(count: number): string {
   if (count >= 1_000) return `${(count / 1_000).toFixed(0)}K`;
   return count.toString();
 }
+
+// ─── Studio Seed Data ─────────────────────────────────────────────────────────
+
+export const seedStudioVideos: StudioVideo[] = [
+  {
+    id: "sv1",
+    title: "Stellar Odyssey",
+    description:
+      "A crew of interstellar explorers ventures beyond the known galaxy.",
+    genre: "Sci-Fi",
+    ageRating: "PG-13",
+    primaryLanguage: "English",
+    posterUrl: "https://picsum.photos/seed/v1stellar/300/450",
+    hlsMasterUrl: "/media/videos/sv1/master.m3u8",
+    processingStatus: "ready",
+    isPublished: true,
+    duration: "2h 18m",
+    dateAdded: Date.now() - 7 * 24 * 60 * 60 * 1000,
+    audioTracks: [
+      {
+        id: "sat1",
+        language: "English",
+        langCode: "en",
+        audioLabel: "Stereo",
+        isDefault: true,
+      },
+      {
+        id: "sat2",
+        language: "Spanish",
+        langCode: "es",
+        audioLabel: "Stereo",
+        isDefault: false,
+      },
+      {
+        id: "sat3",
+        language: "French",
+        langCode: "fr",
+        audioLabel: "Stereo",
+        isDefault: false,
+      },
+    ],
+    subtitles: [
+      { id: "ss1", language: "English", langCode: "en" },
+      { id: "ss2", language: "Spanish", langCode: "es" },
+    ],
+  },
+  {
+    id: "sv2",
+    title: "Gravity's Edge",
+    description: "Two astronauts fight impossible odds to survive in orbit.",
+    genre: "Action",
+    ageRating: "PG-13",
+    primaryLanguage: "English",
+    posterUrl: "https://picsum.photos/seed/v2gravity/300/450",
+    hlsMasterUrl: "/media/videos/sv2/master.m3u8",
+    processingStatus: "ready",
+    isPublished: true,
+    duration: "1h 52m",
+    dateAdded: Date.now() - 14 * 24 * 60 * 60 * 1000,
+    audioTracks: [
+      {
+        id: "sat4",
+        language: "English",
+        langCode: "en",
+        audioLabel: "Stereo",
+        isDefault: true,
+      },
+      {
+        id: "sat5",
+        language: "Japanese",
+        langCode: "ja",
+        audioLabel: "Stereo",
+        isDefault: false,
+      },
+    ],
+    subtitles: [{ id: "ss3", language: "English", langCode: "en" }],
+  },
+  {
+    id: "sv3",
+    title: "Dark Matter",
+    description:
+      "A physicist navigates alternate realities to find his way home.",
+    genre: "Drama",
+    ageRating: "R",
+    primaryLanguage: "English",
+    posterUrl: "https://picsum.photos/seed/v4dark/300/450",
+    hlsMasterUrl: "/media/videos/sv3/master.m3u8",
+    processingStatus: "unpublished",
+    isPublished: false,
+    duration: "2h 05m",
+    dateAdded: Date.now() - 3 * 24 * 60 * 60 * 1000,
+    audioTracks: [
+      {
+        id: "sat6",
+        language: "English",
+        langCode: "en",
+        audioLabel: "Stereo",
+        isDefault: true,
+      },
+    ],
+    subtitles: [],
+  },
+];
+
+export const seedStudioMusic: StudioMusic[] = [
+  {
+    id: "sm1",
+    title: "Cosmic Drift",
+    artist: "Luna Vera",
+    album: "Stellar Dreams",
+    genre: "Electronic",
+    language: "Instrumental",
+    coverArt: "https://picsum.photos/seed/t1cosmic/300/300",
+    dateAdded: Date.now() - 5 * 24 * 60 * 60 * 1000,
+    duration: "4:07",
+    isPublished: true,
+  },
+  {
+    id: "sm2",
+    title: "Solar Winds",
+    artist: "The Astronauts",
+    album: "Beyond the Horizon",
+    genre: "Indie",
+    language: "English",
+    coverArt: "https://picsum.photos/seed/t2solar/300/300",
+    dateAdded: Date.now() - 10 * 24 * 60 * 60 * 1000,
+    duration: "3:18",
+    isPublished: true,
+  },
+  {
+    id: "sm3",
+    title: "Void Walk",
+    artist: "Nova Collective",
+    album: "Deep Space Sessions",
+    genre: "Ambient",
+    language: "Instrumental",
+    coverArt: "https://picsum.photos/seed/t18void/300/300",
+    dateAdded: Date.now() - 2 * 24 * 60 * 60 * 1000,
+    duration: "6:27",
+    isPublished: false,
+  },
+];

@@ -6,14 +6,17 @@ import React, {
   useEffect,
   type ReactNode,
 } from "react";
-import { mockVideos } from "./mockData";
+import { mockVideos, seedStudioMusic, seedStudioVideos } from "./mockData";
 import type {
   AppSettings,
+  AudioTrack,
   DownloadQuality,
   DownloadedItem,
   MusicPlayerState,
   MusicTrack,
   Passenger,
+  StudioMusic,
+  StudioVideo,
   TabId,
   ThemeId,
   VideoContent,
@@ -28,6 +31,8 @@ const KEYS = {
   DOWNLOADS: "sm_downloads",
   SETTINGS: "sm_settings",
   CONNECTION: "sm_connection",
+  STUDIO_VIDEOS: "sm_studio_videos",
+  STUDIO_MUSIC: "sm_studio_music",
 };
 
 // ─── Default Values ───────────────────────────────────────────────────────────
@@ -51,8 +56,20 @@ function getDaysAgo(days: number): number {
   return Date.now() - days * 24 * 60 * 60 * 1000;
 }
 
+function getLicenseDays(role: string): number {
+  switch (role) {
+    case "scientist":
+    case "staff":
+      return 180;
+    case "manager":
+      return 365;
+    default:
+      return 30;
+  }
+}
+
 function seedDownloads(passengerId: string, role: string): DownloadedItem[] {
-  const licenceDays = role === "scientist" ? 180 : 30;
+  const licenceDays = getLicenseDays(role);
   return [
     {
       id: "dl1",
@@ -170,6 +187,7 @@ interface AppContextType {
   closeVideoPlayer: () => void;
   setVideoProgress: (seconds: number) => void;
   setSubtitleLang: (lang: string) => void;
+  setAudioLang: (lang: string) => void;
   showVideoPlayer: boolean;
   setShowVideoPlayer: (v: boolean) => void;
 
@@ -182,6 +200,18 @@ interface AppContextType {
   // Video Detail
   selectedVideo: VideoContent | null;
   setSelectedVideo: (v: VideoContent | null) => void;
+
+  // Studio
+  studioVideos: StudioVideo[];
+  studioMusic: StudioMusic[];
+  addStudioVideo: (v: StudioVideo) => void;
+  updateStudioVideo: (id: string, updates: Partial<StudioVideo>) => void;
+  deleteStudioVideo: (id: string) => void;
+  addAudioTrackToVideo: (videoId: string, track: AudioTrack) => void;
+  removeAudioTrackFromVideo: (videoId: string, trackId: string) => void;
+  addStudioMusic: (m: StudioMusic) => void;
+  updateStudioMusic: (id: string, updates: Partial<StudioMusic>) => void;
+  deleteStudioMusic: (id: string) => void;
 }
 
 // ─── Context ──────────────────────────────────────────────────────────────────
@@ -215,6 +245,31 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
   const [selectedVideo, setSelectedVideo] = useState<VideoContent | null>(null);
 
+  // Studio state
+  const [studioVideos, setStudioVideos] = useState<StudioVideo[]>(() => {
+    const saved = getFromLocalStorage<StudioVideo[] | null>(
+      KEYS.STUDIO_VIDEOS,
+      null,
+    );
+    if (!saved || saved.length === 0) {
+      setToLocalStorage(KEYS.STUDIO_VIDEOS, seedStudioVideos);
+      return seedStudioVideos;
+    }
+    return saved;
+  });
+
+  const [studioMusic, setStudioMusic] = useState<StudioMusic[]>(() => {
+    const saved = getFromLocalStorage<StudioMusic[] | null>(
+      KEYS.STUDIO_MUSIC,
+      null,
+    );
+    if (!saved || saved.length === 0) {
+      setToLocalStorage(KEYS.STUDIO_MUSIC, seedStudioMusic);
+      return seedStudioMusic;
+    }
+    return saved;
+  });
+
   const [musicPlayer, setMusicPlayer] = useState<MusicPlayerState>({
     currentTrack: null,
     isPlaying: false,
@@ -230,6 +285,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     isPlaying: false,
     progress: 0,
     subtitleLang: "English",
+    audioLang: "en",
   });
 
   // Apply theme on settings change
@@ -309,7 +365,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const next = prev.map((d) => {
           if (d.id !== id) return d;
           const role = passenger?.role ?? "tourist";
-          const days = role === "scientist" ? 180 : 30;
+          const days = getLicenseDays(role);
           return {
             ...d,
             expiresAt: Date.now() + days * 24 * 60 * 60 * 1000,
@@ -326,7 +382,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const renewAllDownloads = useCallback(() => {
     setDownloads((prev) => {
       const role = passenger?.role ?? "tourist";
-      const days = role === "scientist" ? 180 : 30;
+      const days = getLicenseDays(role);
       const next = prev.map((d) => ({
         ...d,
         expiresAt: Date.now() + days * 24 * 60 * 60 * 1000,
@@ -444,6 +500,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       isPlaying: true,
       progress: video.resumePosition ?? 0,
       subtitleLang: "English",
+      audioLang: video.defaultAudioLang ?? "en",
     });
     setShowVideoPlayer(true);
   }, []);
@@ -455,11 +512,101 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const setVideoProgress = useCallback((seconds: number) => {
     setVideoPlayer((prev) => ({ ...prev, progress: seconds }));
-    // Also update resume position in mockVideos conceptually
   }, []);
 
   const setSubtitleLang = useCallback((lang: string) => {
     setVideoPlayer((prev) => ({ ...prev, subtitleLang: lang }));
+  }, []);
+
+  const setAudioLang = useCallback((lang: string) => {
+    setVideoPlayer((prev) => ({ ...prev, audioLang: lang }));
+  }, []);
+
+  // ─── Studio ───────────────────────────────────────────────────────────────
+
+  const addStudioVideo = useCallback((v: StudioVideo) => {
+    setStudioVideos((prev) => {
+      const next = [...prev, v];
+      setToLocalStorage(KEYS.STUDIO_VIDEOS, next);
+      return next;
+    });
+  }, []);
+
+  const updateStudioVideo = useCallback(
+    (id: string, updates: Partial<StudioVideo>) => {
+      setStudioVideos((prev) => {
+        const next = prev.map((v) => (v.id === id ? { ...v, ...updates } : v));
+        setToLocalStorage(KEYS.STUDIO_VIDEOS, next);
+        return next;
+      });
+    },
+    [],
+  );
+
+  const deleteStudioVideo = useCallback((id: string) => {
+    setStudioVideos((prev) => {
+      const next = prev.filter((v) => v.id !== id);
+      setToLocalStorage(KEYS.STUDIO_VIDEOS, next);
+      return next;
+    });
+  }, []);
+
+  const addAudioTrackToVideo = useCallback(
+    (videoId: string, track: AudioTrack) => {
+      setStudioVideos((prev) => {
+        const next = prev.map((v) => {
+          if (v.id !== videoId) return v;
+          return { ...v, audioTracks: [...v.audioTracks, track] };
+        });
+        setToLocalStorage(KEYS.STUDIO_VIDEOS, next);
+        return next;
+      });
+    },
+    [],
+  );
+
+  const removeAudioTrackFromVideo = useCallback(
+    (videoId: string, trackId: string) => {
+      setStudioVideos((prev) => {
+        const next = prev.map((v) => {
+          if (v.id !== videoId) return v;
+          return {
+            ...v,
+            audioTracks: v.audioTracks.filter((t) => t.id !== trackId),
+          };
+        });
+        setToLocalStorage(KEYS.STUDIO_VIDEOS, next);
+        return next;
+      });
+    },
+    [],
+  );
+
+  const addStudioMusic = useCallback((m: StudioMusic) => {
+    setStudioMusic((prev) => {
+      const next = [...prev, m];
+      setToLocalStorage(KEYS.STUDIO_MUSIC, next);
+      return next;
+    });
+  }, []);
+
+  const updateStudioMusic = useCallback(
+    (id: string, updates: Partial<StudioMusic>) => {
+      setStudioMusic((prev) => {
+        const next = prev.map((m) => (m.id === id ? { ...m, ...updates } : m));
+        setToLocalStorage(KEYS.STUDIO_MUSIC, next);
+        return next;
+      });
+    },
+    [],
+  );
+
+  const deleteStudioMusic = useCallback((id: string) => {
+    setStudioMusic((prev) => {
+      const next = prev.filter((m) => m.id !== id);
+      setToLocalStorage(KEYS.STUDIO_MUSIC, next);
+      return next;
+    });
   }, []);
 
   // Simulate music progress
@@ -520,6 +667,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     closeVideoPlayer,
     setVideoProgress,
     setSubtitleLang,
+    setAudioLang,
     showVideoPlayer,
     setShowVideoPlayer,
     showSearch,
@@ -528,6 +676,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setSearchInitialTab,
     selectedVideo,
     setSelectedVideo,
+    studioVideos,
+    studioMusic,
+    addStudioVideo,
+    updateStudioVideo,
+    deleteStudioVideo,
+    addAudioTrackToVideo,
+    removeAudioTrackFromVideo,
+    addStudioMusic,
+    updateStudioMusic,
+    deleteStudioMusic,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

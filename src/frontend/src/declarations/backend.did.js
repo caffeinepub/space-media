@@ -8,6 +8,13 @@
 
 import { IDL } from '@icp-sdk/core/candid';
 
+export const AudioTrack = IDL.Record({
+  'id' : IDL.Text,
+  'audioLabel' : IDL.Text,
+  'langCode' : IDL.Text,
+  'language' : IDL.Text,
+  'isDefault' : IDL.Bool,
+});
 export const DownloadedItem = IDL.Record({
   'id' : IDL.Text,
   'title' : IDL.Text,
@@ -21,6 +28,33 @@ export const DownloadedItem = IDL.Record({
   'passengerId' : IDL.Text,
   'mediaType' : IDL.Text,
   'artist' : IDL.Text,
+});
+export const StudioMusic = IDL.Record({
+  'id' : IDL.Text,
+  'title' : IDL.Text,
+  'duration' : IDL.Text,
+  'album' : IDL.Text,
+  'isPublished' : IDL.Bool,
+  'language' : IDL.Text,
+  'genre' : IDL.Text,
+  'artist' : IDL.Text,
+  'coverArt' : IDL.Text,
+  'dateAdded' : IDL.Int,
+});
+export const StudioVideo = IDL.Record({
+  'id' : IDL.Text,
+  'title' : IDL.Text,
+  'audioTracks' : IDL.Vec(AudioTrack),
+  'duration' : IDL.Text,
+  'hlsMasterUrl' : IDL.Text,
+  'processingStatus' : IDL.Text,
+  'isPublished' : IDL.Bool,
+  'ageRating' : IDL.Text,
+  'description' : IDL.Text,
+  'genre' : IDL.Text,
+  'posterUrl' : IDL.Text,
+  'primaryLanguage' : IDL.Text,
+  'dateAdded' : IDL.Int,
 });
 export const Passenger = IDL.Record({
   'id' : IDL.Text,
@@ -36,17 +70,27 @@ export const AppSettings = IDL.Record({
 });
 
 export const idlService = IDL.Service({
+  'addAudioTrack' : IDL.Func([IDL.Text, AudioTrack], [], []),
   'addDownload' : IDL.Func([DownloadedItem], [], []),
   'createPassenger' : IDL.Func(
       [IDL.Text, IDL.Text, IDL.Text, IDL.Text],
       [],
       [],
     ),
+  'createStudioMusic' : IDL.Func([StudioMusic], [], []),
+  'createStudioVideo' : IDL.Func([StudioVideo], [], []),
   'deleteDownload' : IDL.Func([IDL.Text], [], []),
+  'deleteStudioMusic' : IDL.Func([IDL.Text], [], []),
+  'deleteStudioVideo' : IDL.Func([IDL.Text], [], []),
   'getDownloads' : IDL.Func([IDL.Text], [IDL.Vec(DownloadedItem)], ['query']),
   'getPassenger' : IDL.Func([IDL.Text], [Passenger], ['query']),
   'getSettings' : IDL.Func([IDL.Text], [IDL.Opt(AppSettings)], ['query']),
+  'getStudioMusic' : IDL.Func([IDL.Text], [StudioMusic], ['query']),
+  'getStudioVideo' : IDL.Func([IDL.Text], [StudioVideo], ['query']),
   'listPassengers' : IDL.Func([], [IDL.Vec(Passenger)], ['query']),
+  'listStudioMusic' : IDL.Func([], [IDL.Vec(StudioMusic)], ['query']),
+  'listStudioVideos' : IDL.Func([], [IDL.Vec(StudioVideo)], ['query']),
+  'removeAudioTrack' : IDL.Func([IDL.Text, IDL.Text], [], []),
   'renewDownload' : IDL.Func([IDL.Text, IDL.Int], [], []),
   'saveSettings' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [], []),
   'searchDownloads' : IDL.Func(
@@ -54,12 +98,51 @@ export const idlService = IDL.Service({
       [IDL.Vec(DownloadedItem)],
       [],
     ),
+  'setDefaultAudioTrack' : IDL.Func([IDL.Text, IDL.Text], [], []),
+  'updateStudioMusic' : IDL.Func(
+      [
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Bool,
+      ],
+      [],
+      [],
+    ),
+  'updateStudioVideo' : IDL.Func(
+      [
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Bool,
+      ],
+      [],
+      [],
+    ),
+  'validateManagerKey' : IDL.Func([IDL.Text], [IDL.Bool], []),
   'validateStaffKey' : IDL.Func([IDL.Text], [IDL.Bool], []),
 });
 
 export const idlInitArgs = [];
 
 export const idlFactory = ({ IDL }) => {
+  const AudioTrack = IDL.Record({
+    'id' : IDL.Text,
+    'audioLabel' : IDL.Text,
+    'langCode' : IDL.Text,
+    'language' : IDL.Text,
+    'isDefault' : IDL.Bool,
+  });
   const DownloadedItem = IDL.Record({
     'id' : IDL.Text,
     'title' : IDL.Text,
@@ -73,6 +156,33 @@ export const idlFactory = ({ IDL }) => {
     'passengerId' : IDL.Text,
     'mediaType' : IDL.Text,
     'artist' : IDL.Text,
+  });
+  const StudioMusic = IDL.Record({
+    'id' : IDL.Text,
+    'title' : IDL.Text,
+    'duration' : IDL.Text,
+    'album' : IDL.Text,
+    'isPublished' : IDL.Bool,
+    'language' : IDL.Text,
+    'genre' : IDL.Text,
+    'artist' : IDL.Text,
+    'coverArt' : IDL.Text,
+    'dateAdded' : IDL.Int,
+  });
+  const StudioVideo = IDL.Record({
+    'id' : IDL.Text,
+    'title' : IDL.Text,
+    'audioTracks' : IDL.Vec(AudioTrack),
+    'duration' : IDL.Text,
+    'hlsMasterUrl' : IDL.Text,
+    'processingStatus' : IDL.Text,
+    'isPublished' : IDL.Bool,
+    'ageRating' : IDL.Text,
+    'description' : IDL.Text,
+    'genre' : IDL.Text,
+    'posterUrl' : IDL.Text,
+    'primaryLanguage' : IDL.Text,
+    'dateAdded' : IDL.Int,
   });
   const Passenger = IDL.Record({
     'id' : IDL.Text,
@@ -88,17 +198,27 @@ export const idlFactory = ({ IDL }) => {
   });
   
   return IDL.Service({
+    'addAudioTrack' : IDL.Func([IDL.Text, AudioTrack], [], []),
     'addDownload' : IDL.Func([DownloadedItem], [], []),
     'createPassenger' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text, IDL.Text],
         [],
         [],
       ),
+    'createStudioMusic' : IDL.Func([StudioMusic], [], []),
+    'createStudioVideo' : IDL.Func([StudioVideo], [], []),
     'deleteDownload' : IDL.Func([IDL.Text], [], []),
+    'deleteStudioMusic' : IDL.Func([IDL.Text], [], []),
+    'deleteStudioVideo' : IDL.Func([IDL.Text], [], []),
     'getDownloads' : IDL.Func([IDL.Text], [IDL.Vec(DownloadedItem)], ['query']),
     'getPassenger' : IDL.Func([IDL.Text], [Passenger], ['query']),
     'getSettings' : IDL.Func([IDL.Text], [IDL.Opt(AppSettings)], ['query']),
+    'getStudioMusic' : IDL.Func([IDL.Text], [StudioMusic], ['query']),
+    'getStudioVideo' : IDL.Func([IDL.Text], [StudioVideo], ['query']),
     'listPassengers' : IDL.Func([], [IDL.Vec(Passenger)], ['query']),
+    'listStudioMusic' : IDL.Func([], [IDL.Vec(StudioMusic)], ['query']),
+    'listStudioVideos' : IDL.Func([], [IDL.Vec(StudioVideo)], ['query']),
+    'removeAudioTrack' : IDL.Func([IDL.Text, IDL.Text], [], []),
     'renewDownload' : IDL.Func([IDL.Text, IDL.Int], [], []),
     'saveSettings' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [], []),
     'searchDownloads' : IDL.Func(
@@ -106,6 +226,38 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(DownloadedItem)],
         [],
       ),
+    'setDefaultAudioTrack' : IDL.Func([IDL.Text, IDL.Text], [], []),
+    'updateStudioMusic' : IDL.Func(
+        [
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Bool,
+        ],
+        [],
+        [],
+      ),
+    'updateStudioVideo' : IDL.Func(
+        [
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Bool,
+        ],
+        [],
+        [],
+      ),
+    'validateManagerKey' : IDL.Func([IDL.Text], [IDL.Bool], []),
     'validateStaffKey' : IDL.Func([IDL.Text], [IDL.Bool], []),
   });
 };

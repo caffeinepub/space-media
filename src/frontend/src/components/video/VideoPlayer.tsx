@@ -10,6 +10,7 @@ import { Slider } from "@/components/ui/slider";
 import {
   ChevronLeft,
   ChevronRight,
+  Languages,
   Pause,
   Play,
   Subtitles,
@@ -36,8 +37,13 @@ function parseDuration(runtime: string): number {
 }
 
 function VideoPlayerInner() {
-  const { videoPlayer, closeVideoPlayer, setVideoProgress, setSubtitleLang } =
-    useApp();
+  const {
+    videoPlayer,
+    closeVideoPlayer,
+    setVideoProgress,
+    setSubtitleLang,
+    setAudioLang,
+  } = useApp();
   const [showControls, setShowControls] = useState(true);
   const [isPlaying, setIsPlaying] = useState(true);
   const [hasShownResume, setHasShownResume] = useState(false);
@@ -48,6 +54,9 @@ function VideoPlayerInner() {
   const progress = videoPlayer.progress;
   const progressPercent =
     totalDuration > 0 ? (progress / totalDuration) * 100 : 0;
+
+  const audioTracks = video.audioTracks ?? [];
+  const currentAudioLang = videoPlayer.audioLang;
 
   // Show resume toast
   useEffect(() => {
@@ -138,27 +147,55 @@ function VideoPlayerInner() {
                 <p className="text-white/60 text-xs">{video.genre}</p>
               </div>
 
-              {/* Subtitles selector */}
-              <div
-                onClick={(e) => e.stopPropagation()}
-                onKeyDown={() => {}}
-                role="presentation"
-              >
-                <Select
-                  value={videoPlayer.subtitleLang}
-                  onValueChange={setSubtitleLang}
+              <div className="flex items-center gap-1">
+                {/* Audio language selector (Netflix style) */}
+                {audioTracks.length > 1 && (
+                  <div
+                    onClick={(e) => e.stopPropagation()}
+                    onKeyDown={() => {}}
+                    role="presentation"
+                  >
+                    <Select
+                      value={currentAudioLang}
+                      onValueChange={setAudioLang}
+                    >
+                      <SelectTrigger className="w-10 h-9 border-0 bg-black/50 text-white p-0 justify-center [&>svg]:hidden">
+                        <Languages className="w-5 h-5" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {audioTracks.map((track) => (
+                          <SelectItem key={track.id} value={track.langCode}>
+                            {track.language}
+                            {track.isDefault ? " (default)" : ""}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {/* Subtitles selector */}
+                <div
+                  onClick={(e) => e.stopPropagation()}
+                  onKeyDown={() => {}}
+                  role="presentation"
                 >
-                  <SelectTrigger className="w-10 h-9 border-0 bg-black/50 text-white p-0 justify-center [&>svg]:hidden">
-                    <Subtitles className="w-5 h-5" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {subtitleOptions.map((lang) => (
-                      <SelectItem key={lang} value={lang}>
-                        {lang}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  <Select
+                    value={videoPlayer.subtitleLang}
+                    onValueChange={setSubtitleLang}
+                  >
+                    <SelectTrigger className="w-10 h-9 border-0 bg-black/50 text-white p-0 justify-center [&>svg]:hidden">
+                      <Subtitles className="w-5 h-5" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {subtitleOptions.map((lang) => (
+                        <SelectItem key={lang} value={lang}>
+                          {lang}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
 
@@ -212,14 +249,20 @@ function VideoPlayerInner() {
                   "linear-gradient(to top, rgba(0,0,0,0.8), transparent)",
               }}
             >
-              {/* Subtitle display */}
-              {videoPlayer.subtitleLang !== "Off" && (
-                <div className="text-center mb-2">
-                  <span className="text-white bg-black/60 px-3 py-1 rounded text-sm">
-                    ♪ {videoPlayer.subtitleLang} subtitles active ♪
+              {/* Subtitle / audio display */}
+              <div className="flex items-center justify-center gap-3 mb-2">
+                {videoPlayer.subtitleLang !== "Off" && (
+                  <span className="text-white bg-black/60 px-3 py-1 rounded text-xs">
+                    CC: {videoPlayer.subtitleLang}
                   </span>
-                </div>
-              )}
+                )}
+                {audioTracks.length > 1 && currentAudioLang && (
+                  <span className="text-white/80 bg-black/40 px-2 py-0.5 rounded text-xs">
+                    {audioTracks.find((t) => t.langCode === currentAudioLang)
+                      ?.language ?? currentAudioLang}
+                  </span>
+                )}
+              </div>
 
               {/* Seek bar */}
               <div

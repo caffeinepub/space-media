@@ -27,8 +27,7 @@ export default function UpNextQueue({
       <button
         type="button"
         onClick={onToggle}
-        className="flex items-center justify-between w-full py-3"
-        style={{ color: "oklch(0.35 0.01 270)" }}
+        className="flex items-center justify-between w-full py-3 text-muted-foreground hover:text-foreground transition-colors focus-visible:ring-2 focus-visible:ring-primary rounded"
       >
         <span className="text-sm font-semibold">Up Next</span>
         <motion.div
@@ -49,17 +48,9 @@ export default function UpNextQueue({
             className="overflow-hidden"
           >
             {upNext.length === 0 ? (
-              <div className="flex flex-col items-center gap-2 py-6 opacity-40">
-                <Music
-                  className="w-6 h-6"
-                  style={{ color: "oklch(0.55 0.01 270)" }}
-                />
-                <p
-                  className="text-xs"
-                  style={{ color: "oklch(0.55 0.01 270)" }}
-                >
-                  No more tracks in queue
-                </p>
+              <div className="flex flex-col items-center gap-2 py-6 text-muted-foreground opacity-60">
+                <Music className="w-6 h-6" />
+                <p className="text-xs">No more tracks in queue</p>
               </div>
             ) : (
               <div className="space-y-1">
@@ -70,7 +61,7 @@ export default function UpNextQueue({
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.04 }}
                     onClick={() => playTrack(track, queue)}
-                    className="w-full flex items-center gap-3 py-2 px-1 rounded-lg hover:bg-black/5 transition-colors focus:outline-none"
+                    className="w-full flex items-center gap-3 py-2 px-1 rounded-lg hover:bg-secondary/60 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   >
                     <img
                       src={track.albumArt}
@@ -78,23 +69,14 @@ export default function UpNextQueue({
                       className="w-10 h-10 rounded-lg object-cover shrink-0"
                     />
                     <div className="flex-1 min-w-0 text-left">
-                      <p
-                        className="text-sm font-medium truncate"
-                        style={{ color: "oklch(0.15 0.01 270)" }}
-                      >
+                      <p className="text-sm font-medium truncate text-foreground">
                         {track.title}
                       </p>
-                      <p
-                        className="text-xs truncate"
-                        style={{ color: "oklch(0.50 0.01 270)" }}
-                      >
+                      <p className="text-xs truncate text-muted-foreground">
                         {track.artist}
                       </p>
                     </div>
-                    <span
-                      className="text-xs shrink-0"
-                      style={{ color: "oklch(0.60 0.01 270)" }}
-                    >
+                    <span className="text-xs shrink-0 text-muted-foreground">
                       {formatDuration(track.duration)}
                     </span>
                   </motion.button>

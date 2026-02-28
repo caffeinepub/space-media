@@ -4,10 +4,43 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import type { DownloadQuality } from "@/types";
-import { LogOut, User, Wifi, WifiOff } from "lucide-react";
+import {
+  Clapperboard,
+  LogOut,
+  Shield,
+  User,
+  Wifi,
+  WifiOff,
+} from "lucide-react";
 import { motion } from "motion/react";
 import EQPanel from "./EQPanel";
 import ThemeChooser from "./ThemeChooser";
+
+function getRoleLabel(role: string): { text: string; class: string } {
+  switch (role) {
+    case "manager":
+      return { text: "Manager", class: "bg-purple-500/20 text-purple-400" };
+    case "staff":
+      return { text: "Staff", class: "bg-green-500/20 text-green-400" };
+    case "scientist":
+      return { text: "Scientist", class: "bg-blue-500/20 text-blue-400" };
+    default:
+      return { text: "Tourist", class: "bg-amber-500/20 text-amber-400" };
+  }
+}
+
+function getLicenseText(role: string): string {
+  switch (role) {
+    case "manager":
+      return "Manager: 365-day offline license";
+    case "staff":
+      return "Staff: 180-day offline license";
+    case "scientist":
+      return "Scientist: 180-day offline license";
+    default:
+      return "Tourist: 30-day offline license";
+  }
+}
 
 export default function SettingsTab() {
   const {
@@ -20,16 +53,12 @@ export default function SettingsTab() {
   } = useApp();
 
   const role = passenger?.role ?? "tourist";
-  const licenseText =
-    role === "scientist"
-      ? "Scientist: 180-day offline license"
-      : "Tourist: 30-day offline license";
+  const licenseText = getLicenseText(role);
+  const roleLabel = getRoleLabel(role);
+  const isManager = role === "manager";
+  const isStaff = role === "staff";
 
   const qualities: DownloadQuality[] = ["low", "medium", "high"];
-
-  function handleLogout() {
-    logout();
-  }
 
   return (
     <div className="flex flex-col h-full overflow-y-auto scrollbar-hide bg-background">
@@ -56,22 +85,37 @@ export default function SettingsTab() {
                     "linear-gradient(135deg, oklch(var(--theme-accent)), oklch(var(--theme-accent-2)))",
                 }}
               >
-                <User className="w-6 h-6 text-white" />
+                {isManager ? (
+                  <Shield className="w-6 h-6 text-white" />
+                ) : (
+                  <User className="w-6 h-6 text-white" />
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-bold text-foreground">
                   {passenger?.name ?? "Unknown"}
                 </p>
-                <div className="flex items-center gap-2 mt-1">
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
                   <span
-                    className={`text-xs font-semibold capitalize px-2 py-0.5 rounded-full ${
-                      role === "scientist"
-                        ? "bg-blue-500/20 text-blue-400"
-                        : "bg-amber-500/20 text-amber-400"
-                    }`}
+                    className={`text-xs font-semibold capitalize px-2 py-0.5 rounded-full ${roleLabel.class}`}
                   >
-                    {role}
+                    {roleLabel.text}
                   </span>
+                  {isManager && (
+                    <motion.span
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30"
+                    >
+                      <Clapperboard className="w-2.5 h-2.5" />
+                      Studio Access
+                    </motion.span>
+                  )}
+                  {isStaff && (
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 border border-green-500/30">
+                      Staff
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -102,7 +146,7 @@ export default function SettingsTab() {
             <Button
               variant="outline"
               size="sm"
-              onClick={handleLogout}
+              onClick={logout}
               className="w-full gap-2 text-destructive border-destructive/30 hover:bg-destructive/10"
             >
               <LogOut className="w-4 h-4" />

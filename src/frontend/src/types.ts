@@ -154,6 +154,8 @@ export type ThemeId =
 
 export type DownloadQuality = "low" | "medium" | "high";
 
+export type PlayerBgId = "blue-moon" | "red-nebula";
+
 export interface AppSettings {
   theme: ThemeId;
   downloadQuality: DownloadQuality;
@@ -161,6 +163,7 @@ export interface AppSettings {
   eqBands: number[]; // 5 values, -12 to +12
   eqPreset: string;
   simulateOffline: boolean;
+  playerBg: PlayerBgId;
 }
 
 // ─── Player State ────────────────────────────────────────────────────────────

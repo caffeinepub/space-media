@@ -15,11 +15,11 @@ export default function HeroBanner({ video, onMoreInfo }: HeroBannerProps) {
   return (
     <div
       className="relative w-full
-        h-[clamp(280px,68vw,340px)]
-        md:h-[clamp(320px,45vw,420px)]
-        lg:h-[clamp(400px,42vw,520px)]
-        xl:h-[clamp(500px,40vw,620px)]
-        2xl:h-[clamp(560px,38vw,700px)]"
+        h-[clamp(320px,72vw,400px)]
+        md:h-[clamp(360px,48vw,460px)]
+        lg:h-[clamp(430px,44vw,550px)]
+        xl:h-[clamp(530px,42vw,650px)]
+        2xl:h-[clamp(600px,40vw,740px)]"
     >
       {/* Backdrop image */}
       <img
@@ -56,8 +56,9 @@ export default function HeroBanner({ video, onMoreInfo }: HeroBannerProps) {
         }}
       />
 
-      {/* Content — pt-14 ensures buttons stay below the overlaid top bar on mobile */}
-      <div className="absolute inset-0 flex flex-col justify-end px-4 pb-5 pt-14 md:px-8 md:pb-8 md:pt-0 lg:px-10 lg:pb-10 xl:px-14 xl:pb-12">
+      {/* Content — pt-14 ensures buttons stay below the overlaid top bar on mobile.
+          pb-14 on mobile ensures the action buttons don't get hidden under the genre pills overlay. */}
+      <div className="absolute inset-0 flex flex-col justify-end px-4 pb-14 pt-14 md:px-8 md:pb-16 md:pt-0 lg:px-10 lg:pb-14 xl:px-14 xl:pb-16">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}

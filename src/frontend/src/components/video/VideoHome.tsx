@@ -39,7 +39,7 @@ export default function VideoHome({ onSelectVideo }: VideoHomeProps) {
 
   return (
     <div className="flex flex-col h-full overflow-y-auto scrollbar-hide bg-background">
-      {/* Hero Banner with overlaid top bar (Netflix-style) */}
+      {/* Hero Banner + overlaid top bar + overlaid genre pills — all in one relative container */}
       <div className="relative">
         <HeroBanner video={featuredVideo} onMoreInfo={onSelectVideo} />
 
@@ -60,32 +60,42 @@ export default function VideoHome({ onSelectVideo }: VideoHomeProps) {
             </button>
           </div>
         </div>
-      </div>
 
-      {/* Genre Filter */}
-      <div className="flex gap-2 overflow-x-auto scrollbar-hide px-4 xl:px-8 py-4 xl:py-5">
-        {GENRES.map((genre) => (
-          <button
-            type="button"
-            key={genre}
-            onClick={() => setSelectedGenre(genre)}
-            className={`shrink-0 px-4 py-1.5 xl:px-5 xl:py-2 rounded-full text-xs md:text-sm xl:text-sm font-semibold transition-all focus-visible:ring-2 focus-visible:ring-primary ${
-              selectedGenre === genre
-                ? "text-white shadow-glow-sm"
-                : "bg-secondary text-muted-foreground hover:text-foreground"
-            }`}
-            style={
-              selectedGenre === genre
-                ? {
-                    background:
-                      "linear-gradient(90deg, oklch(var(--theme-accent)), oklch(var(--theme-accent-2)))",
-                  }
-                : undefined
-            }
-          >
-            {genre}
-          </button>
-        ))}
+        {/* Genre Filter — overlaid at the bottom of the hero, Netflix-style */}
+        <div className="absolute bottom-0 left-0 right-0 z-10">
+          {/* Subtle gradient behind pills for readability over the image */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background:
+                "linear-gradient(to top, oklch(var(--background) / 0.85) 0%, transparent 100%)",
+            }}
+          />
+          <div className="relative flex gap-2 overflow-x-auto scrollbar-hide px-4 xl:px-8 pb-3 pt-4 xl:pb-4">
+            {GENRES.map((genre) => (
+              <button
+                type="button"
+                key={genre}
+                onClick={() => setSelectedGenre(genre)}
+                className={`shrink-0 px-4 py-1.5 xl:px-5 xl:py-2 rounded-full text-xs md:text-sm xl:text-sm font-semibold transition-all focus-visible:ring-2 focus-visible:ring-white ${
+                  selectedGenre === genre
+                    ? "text-white shadow-glow-sm"
+                    : "bg-black/40 text-white/80 hover:text-white hover:bg-black/60 backdrop-blur-sm border border-white/10"
+                }`}
+                style={
+                  selectedGenre === genre
+                    ? {
+                        background:
+                          "linear-gradient(90deg, oklch(var(--theme-accent)), oklch(var(--theme-accent-2)))",
+                      }
+                    : undefined
+                }
+              >
+                {genre}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Content Rows */}

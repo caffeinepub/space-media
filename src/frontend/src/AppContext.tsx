@@ -15,6 +15,7 @@ import type {
   MusicPlayerState,
   MusicTrack,
   Passenger,
+  PlayerBgId,
   StudioMusic,
   StudioVideo,
   TabId,
@@ -45,6 +46,7 @@ function getDefaultSettings(passengerId: string): AppSettings {
     eqBands: [0, 0, 0, 0, 0],
     eqPreset: "Flat",
     simulateOffline: false,
+    playerBg: "blue-moon",
   };
 }
 
@@ -229,7 +231,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const [settings, setSettings] = useState<AppSettings>(() => {
     const saved = getFromLocalStorage<AppSettings | null>(KEYS.SETTINGS, null);
-    return saved ?? getDefaultSettings("");
+    if (!saved) return getDefaultSettings("");
+    // Backfill playerBg if missing from older saved settings
+    return {
+      ...saved,
+      playerBg: saved.playerBg ?? ("blue-moon" as PlayerBgId),
+    };
   });
 
   const [isConnected, setIsConnected] = useState<boolean>(() =>

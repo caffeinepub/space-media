@@ -1,46 +1,52 @@
 # Space Media
 
 ## Current State
-New project. No existing code.
+Space Media is a full-featured offline media app with:
+- Netflix-like Video compartment
+- Apple Music-like Music compartment with existing MusicPlayer.tsx (card-style, dark background)
+- Downloads tab with license expiry
+- Manager Studio tab
+- Settings with ThemeChooser (8 themes), EQPanel, download quality
+- Bottom nav (mobile) / sidebar (tablet+)
+- Passenger login with staff key
+
+The existing MusicPlayer.tsx shows a dark card overlay on top of a blurred background with artwork, track info, progress bar, and controls. It does NOT have a full-screen background image or glassmorphism treatment.
 
 ## Requested Changes (Diff)
 
 ### Add
-- Full-stack Space Media app: a mobile-first offline media platform for passengers on a spacecraft/vessel, with Netflix-like Video and Apple Music-like Music experiences in one app.
-- Bottom navigation: Video | Music | Downloads | Profile/Settings
-- Top-right status pill showing Connected / Offline state (mocked via local flag)
-- Staff-assisted login flow: Special Key screen → Passenger Setup (create/find by ID) with role selection (Tourist / Scientist)
-- Passenger data model stored in localStorage: passengerId, name, role, tripId, createdAt
-- DownloadedItem data model in localStorage: id, type, title, artworkUrl, downloadedAt, expiresAt, licenseStatus, genre, language, artist, album, tags
-- VIDEO tab: hero banner, horizontal carousels (Continue Watching, Trending, Genres, Recently Added), video detail page, prototype player UI with resume + subtitles selector
-- MUSIC tab: Apple Music-like layout with Recently Played, Featured Playlists, Albums grid, Artists list; full music player with artwork, progress bar, controls (play/pause/next/prev/shuffle/repeat), Up Next queue; mini-player bar
-- SEARCH: available in Video tab, Music tab, and Downloads tab; offline-first local index search; tabs for Videos/Music; Downloaded Only filter toggle; badges for Downloaded vs Stream Only
-- DOWNLOADS tab: split into Downloaded Videos / Downloaded Music; license countdown ("Expires in X days"); expired items show "LICENSE EXPIRED" in red; click expired → modal with OK and Renew (Renew disabled if Offline); Renew All button (only when Connected); delete download; sort options (Expiring soon / Recently downloaded / Size)
-- Role-based expiry: Tourist = 30 days, Scientist = 180 days, applied automatically at download time
-- SETTINGS: 8 theme chooser with local bundled theme preview images; global theme application; 5-band EQ UI + presets (Flat, Bass Boost, Treble Boost, Vocal) [UI only]; Download quality selector (Low/Medium/High); read-only display of logged-in role + license duration rule
-- Profile page: view-only display of Passenger ID, Name, Role, Trip package, Start/End date
-- All data powered by mock APIs and localStorage
+- New `NowPlayingScreen` component: a full-screen, immersive "Now Playing" view with:
+  - Full-screen background image (space theme) filling the entire screen
+  - Subtle dark gradient overlay at the bottom
+  - Large frosted-glass rounded card at the bottom (glassmorphism: blur, translucent, soft shadow, border)
+  - Card content:
+    - Top row: Heart/Favorite icon (left), Song title + subtitle (center-left), "..." menu icon (right)
+    - Progress bar section: thin Apple Music-style bar + time labels
+    - Controls row: Shuffle | Prev | large Play/Pause circle | Next | Repeat
+  - Two background themes: "Blue Moon" (uploaded BLUE-MOON-L-1.jpg) and "Red Nebula" (generated red-nebula-bg.dim_1080x1920.jpg)
+  - Player-specific theme selector in the component (separate from global app theme)
+  - Smooth animated background fade when switching themes
+  - Mobile-first, also scales to tablet
+- Store selected player background theme in local state (or settings)
 
 ### Modify
-- N/A (new project)
+- Replace/upgrade MusicPlayer.tsx to use the new NowPlayingScreen full-screen glassmorphism layout when open (keep all existing player state/controls wired)
+- Settings tab: add a "Player Background" section with two theme options (Blue Moon / Red Nebula) so user can switch from Settings too
 
 ### Remove
-- N/A (new project)
+- Nothing removed; existing controls/state (shuffle, repeat, queue, volume) remain but volume and Up Next queue collapse to a secondary section or remain as-is below the main glass card
 
 ## Implementation Plan
-
-**Backend (Motoko)**
-- Passenger actor: store/retrieve passengers by ID, store with role, name, tripId, createdAt
-- DownloadedItem actor: store/retrieve downloaded items per passenger, compute licenseStatus based on expiresAt
-- App config actor: store/retrieve staff special key (hardcoded default), theme preferences
-
-**Frontend (React + TypeScript)**
-1. App shell: bottom nav tabs, top-right status pill, global theme context, auth guard
-2. Auth screens: StaffKeyScreen, PassengerSetupScreen (create/find flow)
-3. Video tab: HeroBanner, ContentRow (carousel), VideoDetailPage, VideoPlayerPage
-4. Music tab: MusicHome, AlbumGrid, ArtistsList, PlaylistsSection, MusicPlayerPage, MiniPlayerBar, UpNextQueue
-5. Search: SearchScreen (shared), offline local index, Downloaded Only filter, tab switcher
-6. Downloads tab: DownloadsScreen split by type, LicenseExpiredModal, sort controls, Renew All
-7. Settings tab: ThemeChooser (8 local images), EQPanel (5-band + presets), DownloadQualitySelector, ProfileReadOnly
-8. Data layer: localStorage hooks for passengers, downloads, search index, theme/settings
-9. Mock data: 10 video items, 20 music tracks, 5 playlists, 5 albums, 8 artists
+1. Create `NowPlayingScreen.tsx` component with:
+   - Full-screen fixed overlay
+   - Background `<img>` that crossfades between the two themes using CSS transitions / framer-motion
+   - Bottom gradient overlay div
+   - Glassmorphism card: `backdrop-blur`, semi-transparent bg, rounded-3xl, shadow, border
+   - Card top row: Heart toggle, song title + subtitle text, MoreHorizontal ("...") icon button
+   - Progress bar: custom thin range or Slider component + time labels
+   - Controls: Shuffle, SkipBack, Play/Pause circle button, SkipForward, Repeat
+   - Animate play/pause with scale transition
+2. Add player background theme state to AppContext (playerBg: "blue-moon" | "red-nebula") persisted in settings
+3. Update MusicPlayer.tsx to render NowPlayingScreen instead of current card overlay
+4. Add "Player Background" picker in SettingsTab with two thumbnail buttons
+5. Use /assets/uploads/BLUE-MOON-L-1.jpg and /assets/generated/red-nebula-bg.dim_1080x1920.jpg as local assets

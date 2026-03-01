@@ -1,21 +1,6 @@
 import { useApp } from "@/AppContext";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Languages,
-  Pause,
-  Play,
-  Subtitles,
-  X,
-} from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Pause, Play, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -36,6 +21,204 @@ function parseDuration(runtime: string): number {
   return (hours * 60 + mins) * 60;
 }
 
+// ─── Language Panel ──────────────────────────────────────────────────────────
+
+interface LangPanelProps {
+  tab: "audio" | "subtitles";
+  onTabChange: (tab: "audio" | "subtitles") => void;
+  audioTracks: Array<{
+    id: string;
+    language: string;
+    langCode: string;
+    audioLabel?: string;
+    isDefault?: boolean;
+  }>;
+  subtitleOptions: string[];
+  currentAudioLang: string;
+  currentSubtitleLang: string;
+  onSelectAudio: (langCode: string) => void;
+  onSelectSubtitle: (lang: string) => void;
+  onClose: () => void;
+}
+
+function LangPanel({
+  tab,
+  onTabChange,
+  audioTracks,
+  subtitleOptions,
+  currentAudioLang,
+  currentSubtitleLang,
+  onSelectAudio,
+  onSelectSubtitle,
+  onClose,
+}: LangPanelProps) {
+  return (
+    <motion.div
+      className="fixed inset-0 z-[60] flex items-end justify-center"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
+      onClick={onClose}
+      onKeyDown={() => {}}
+      role="presentation"
+    >
+      {/* Dark backdrop */}
+      <div className="absolute inset-0 bg-black/70" />
+
+      {/* Panel card */}
+      <motion.div
+        className="relative w-full max-w-lg mx-auto bg-[#1a1a1a] rounded-t-[28px] overflow-hidden shadow-2xl"
+        style={{ maxHeight: "75vh" }}
+        initial={{ y: "100%" }}
+        animate={{ y: 0 }}
+        exit={{ y: "100%" }}
+        transition={{ type: "spring", damping: 30, stiffness: 300 }}
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={() => {}}
+        role="presentation"
+      >
+        {/* Drag handle */}
+        <div className="flex justify-center pt-3 pb-1">
+          <div className="w-10 h-1 rounded-full bg-white/20" />
+        </div>
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-3">
+          <h2 className="text-white text-base font-semibold tracking-wide">
+            Audio &amp; Subtitles
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+            aria-label="Close"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Tab bar */}
+        <div className="flex mx-5 mb-1 bg-white/5 rounded-xl p-1 gap-1">
+          <button
+            type="button"
+            onClick={() => onTabChange("audio")}
+            className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
+              tab === "audio"
+                ? "bg-white text-black shadow"
+                : "text-white/60 hover:text-white"
+            }`}
+          >
+            Audio
+          </button>
+          <button
+            type="button"
+            onClick={() => onTabChange("subtitles")}
+            className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
+              tab === "subtitles"
+                ? "bg-white text-black shadow"
+                : "text-white/60 hover:text-white"
+            }`}
+          >
+            Subtitles
+          </button>
+        </div>
+
+        {/* List */}
+        <div className="overflow-y-auto pb-8" style={{ maxHeight: "52vh" }}>
+          {tab === "audio" && (
+            <ul className="px-3 pt-1">
+              {audioTracks.length === 0 ? (
+                <li className="px-4 py-6 text-center text-white/40 text-sm">
+                  No audio tracks available
+                </li>
+              ) : (
+                audioTracks.map((track) => {
+                  const isActive = track.langCode === currentAudioLang;
+                  return (
+                    <li key={track.id}>
+                      <button
+                        type="button"
+                        onClick={() => onSelectAudio(track.langCode)}
+                        className={`w-full flex items-center justify-between px-4 py-3.5 rounded-xl mb-0.5 transition-all text-left ${
+                          isActive
+                            ? "bg-white/15 border border-white/20"
+                            : "hover:bg-white/8"
+                        }`}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p
+                            className={`text-sm font-semibold truncate ${isActive ? "text-white" : "text-white/90"}`}
+                          >
+                            {track.language}
+                            {track.isDefault ? (
+                              <span className="ml-2 text-[10px] font-normal text-white/40 uppercase tracking-wider">
+                                Default
+                              </span>
+                            ) : null}
+                          </p>
+                          {track.audioLabel && (
+                            <p className="text-xs text-white/40 mt-0.5">
+                              {track.audioLabel}
+                            </p>
+                          )}
+                        </div>
+                        {isActive && (
+                          <Check className="w-4 h-4 text-white ml-3 flex-shrink-0" />
+                        )}
+                      </button>
+                    </li>
+                  );
+                })
+              )}
+            </ul>
+          )}
+
+          {tab === "subtitles" && (
+            <ul className="px-3 pt-1">
+              {subtitleOptions.map((lang) => {
+                const isActive = lang === currentSubtitleLang;
+                return (
+                  <li key={lang}>
+                    <button
+                      type="button"
+                      onClick={() => onSelectSubtitle(lang)}
+                      className={`w-full flex items-center justify-between px-4 py-3.5 rounded-xl mb-0.5 transition-all text-left ${
+                        isActive
+                          ? "bg-white/15 border border-white/20"
+                          : "hover:bg-white/8"
+                      }`}
+                    >
+                      <p
+                        className={`text-sm font-medium ${
+                          lang === "Off"
+                            ? isActive
+                              ? "text-white"
+                              : "text-white/60"
+                            : isActive
+                              ? "text-white font-semibold"
+                              : "text-white/90"
+                        }`}
+                      >
+                        {lang === "Off" ? "Off" : lang}
+                      </p>
+                      {isActive && (
+                        <Check className="w-4 h-4 text-white ml-3 flex-shrink-0" />
+                      )}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+// ─── Player Inner ─────────────────────────────────────────────────────────────
+
 function VideoPlayerInner() {
   const {
     videoPlayer,
@@ -47,6 +230,10 @@ function VideoPlayerInner() {
   const [showControls, setShowControls] = useState(true);
   const [isPlaying, setIsPlaying] = useState(true);
   const [hasShownResume, setHasShownResume] = useState(false);
+  const [showLangPanel, setShowLangPanel] = useState(false);
+  const [langPanelTab, setLangPanelTab] = useState<"audio" | "subtitles">(
+    "audio",
+  );
   const controlsTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const video = videoPlayer.currentVideo!;
@@ -57,6 +244,13 @@ function VideoPlayerInner() {
 
   const audioTracks = video.audioTracks ?? [];
   const currentAudioLang = videoPlayer.audioLang;
+  const subtitleOptions = ["Off", ...video.subtitles];
+
+  // Derive the display name of the current audio track
+  const currentAudioTrack = audioTracks.find(
+    (t) => t.langCode === currentAudioLang,
+  );
+  const audioDisplayName = currentAudioTrack?.language ?? currentAudioLang;
 
   // Show resume toast
   useEffect(() => {
@@ -66,8 +260,12 @@ function VideoPlayerInner() {
     }
   }, [video, hasShownResume]);
 
-  // Auto-hide controls
+  // Auto-hide controls — paused while lang panel is open
   useEffect(() => {
+    if (showLangPanel) {
+      if (controlsTimer.current) clearTimeout(controlsTimer.current);
+      return;
+    }
     if (showControls) {
       if (controlsTimer.current) clearTimeout(controlsTimer.current);
       controlsTimer.current = setTimeout(() => setShowControls(false), 3000);
@@ -75,7 +273,7 @@ function VideoPlayerInner() {
     return () => {
       if (controlsTimer.current) clearTimeout(controlsTimer.current);
     };
-  }, [showControls]);
+  }, [showControls, showLangPanel]);
 
   // Simulate playback progress
   useEffect(() => {
@@ -87,6 +285,7 @@ function VideoPlayerInner() {
   }, [isPlaying, progress, setVideoProgress]);
 
   function handleTap() {
+    if (showLangPanel) return;
     setShowControls((v) => !v);
   }
 
@@ -95,7 +294,40 @@ function VideoPlayerInner() {
     setVideoProgress(newProgress);
   }
 
-  const subtitleOptions = ["Off", ...video.subtitles];
+  function openAudioPanel(e: React.MouseEvent) {
+    e.stopPropagation();
+    setLangPanelTab("audio");
+    setShowLangPanel(true);
+    // Keep controls visible
+    setShowControls(true);
+    if (controlsTimer.current) clearTimeout(controlsTimer.current);
+  }
+
+  function openSubtitlePanel(e: React.MouseEvent) {
+    e.stopPropagation();
+    setLangPanelTab("subtitles");
+    setShowLangPanel(true);
+    setShowControls(true);
+    if (controlsTimer.current) clearTimeout(controlsTimer.current);
+  }
+
+  function handleSelectAudio(langCode: string) {
+    setAudioLang(langCode);
+    const trackName =
+      audioTracks.find((t) => t.langCode === langCode)?.language ?? langCode;
+    toast.success(`Audio: ${trackName}`);
+    setShowLangPanel(false);
+  }
+
+  function handleSelectSubtitle(lang: string) {
+    setSubtitleLang(lang);
+    if (lang === "Off") {
+      toast.success("Subtitles off");
+    } else {
+      toast.success(`Subtitles: ${lang}`);
+    }
+    setShowLangPanel(false);
+  }
 
   return (
     <div
@@ -147,55 +379,37 @@ function VideoPlayerInner() {
                 <p className="text-white/60 text-xs">{video.genre}</p>
               </div>
 
-              <div className="flex items-center gap-1">
-                {/* Audio language selector (Netflix style) */}
-                {audioTracks.length > 1 && (
-                  <div
-                    onClick={(e) => e.stopPropagation()}
-                    onKeyDown={() => {}}
-                    role="presentation"
+              {/* Language pill buttons */}
+              <div className="flex items-center gap-2">
+                {audioTracks.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={openAudioPanel}
+                    className="px-3 py-1 rounded-full bg-black/60 text-white text-xs font-medium border border-white/20 backdrop-blur-sm hover:bg-black/80 transition-colors flex items-center gap-1.5"
+                    aria-label={`Audio: ${audioDisplayName}`}
                   >
-                    <Select
-                      value={currentAudioLang}
-                      onValueChange={setAudioLang}
-                    >
-                      <SelectTrigger className="w-10 h-9 border-0 bg-black/50 text-white p-0 justify-center [&>svg]:hidden">
-                        <Languages className="w-5 h-5" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {audioTracks.map((track) => (
-                          <SelectItem key={track.id} value={track.langCode}>
-                            {track.language}
-                            {track.isDefault ? " (default)" : ""}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                    <span className="opacity-60 text-[10px] uppercase tracking-wider">
+                      Audio
+                    </span>
+                    <span>{audioDisplayName}</span>
+                  </button>
                 )}
 
-                {/* Subtitles selector */}
-                <div
-                  onClick={(e) => e.stopPropagation()}
-                  onKeyDown={() => {}}
-                  role="presentation"
+                <button
+                  type="button"
+                  onClick={openSubtitlePanel}
+                  className="px-3 py-1 rounded-full bg-black/60 text-white text-xs font-medium border border-white/20 backdrop-blur-sm hover:bg-black/80 transition-colors flex items-center gap-1.5"
+                  aria-label={`Subtitles: ${videoPlayer.subtitleLang}`}
                 >
-                  <Select
-                    value={videoPlayer.subtitleLang}
-                    onValueChange={setSubtitleLang}
-                  >
-                    <SelectTrigger className="w-10 h-9 border-0 bg-black/50 text-white p-0 justify-center [&>svg]:hidden">
-                      <Subtitles className="w-5 h-5" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {subtitleOptions.map((lang) => (
-                        <SelectItem key={lang} value={lang}>
-                          {lang}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                  <span className="opacity-60 text-[10px] uppercase tracking-wider">
+                    CC
+                  </span>
+                  <span>
+                    {videoPlayer.subtitleLang === "Off"
+                      ? "Off"
+                      : videoPlayer.subtitleLang}
+                  </span>
+                </button>
               </div>
             </div>
 
@@ -249,21 +463,6 @@ function VideoPlayerInner() {
                   "linear-gradient(to top, rgba(0,0,0,0.8), transparent)",
               }}
             >
-              {/* Subtitle / audio display */}
-              <div className="flex items-center justify-center gap-3 mb-2">
-                {videoPlayer.subtitleLang !== "Off" && (
-                  <span className="text-white bg-black/60 px-3 py-1 rounded text-xs">
-                    CC: {videoPlayer.subtitleLang}
-                  </span>
-                )}
-                {audioTracks.length > 1 && currentAudioLang && (
-                  <span className="text-white/80 bg-black/40 px-2 py-0.5 rounded text-xs">
-                    {audioTracks.find((t) => t.langCode === currentAudioLang)
-                      ?.language ?? currentAudioLang}
-                  </span>
-                )}
-              </div>
-
               {/* Seek bar */}
               <div
                 onClick={(e) => e.stopPropagation()}
@@ -302,6 +501,23 @@ function VideoPlayerInner() {
           }}
         />
       </div>
+
+      {/* Language panel (portal-like, above everything) */}
+      <AnimatePresence>
+        {showLangPanel && (
+          <LangPanel
+            tab={langPanelTab}
+            onTabChange={setLangPanelTab}
+            audioTracks={audioTracks}
+            subtitleOptions={subtitleOptions}
+            currentAudioLang={currentAudioLang}
+            currentSubtitleLang={videoPlayer.subtitleLang}
+            onSelectAudio={handleSelectAudio}
+            onSelectSubtitle={handleSelectSubtitle}
+            onClose={() => setShowLangPanel(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

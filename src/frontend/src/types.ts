@@ -197,4 +197,10 @@ export interface ThemeDefinition {
 
 // ─── Navigation ──────────────────────────────────────────────────────────────
 
-export type TabId = "video" | "music" | "downloads" | "studio" | "profile";
+export type TabId =
+  | "video"
+  | "music"
+  | "downloads"
+  | "studio"
+  | "analytics"
+  | "profile";

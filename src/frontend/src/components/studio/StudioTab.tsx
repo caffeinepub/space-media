@@ -52,33 +52,38 @@ export default function StudioTab() {
             </div>
           </div>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                size="sm"
-                className="h-8 xl:h-9 text-xs xl:text-sm gap-1.5 bg-purple-600 hover:bg-purple-700 text-white border-0"
+          <div className="flex items-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  size="sm"
+                  className="h-8 xl:h-9 text-xs xl:text-sm gap-1.5 bg-purple-600 hover:bg-purple-700 text-white border-0"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Upload
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="bg-card border-border"
               >
-                <Plus className="w-3.5 h-3.5" />
-                Upload
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-card border-border">
-              <DropdownMenuItem
-                onClick={() => setView({ screen: "upload-video" })}
-                className="gap-2 text-sm"
-              >
-                <Film className="w-4 h-4 text-purple-400" />
-                Upload Video
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => setView({ screen: "upload-music" })}
-                className="gap-2 text-sm"
-              >
-                <Music className="w-4 h-4 text-purple-400" />
-                Upload Music
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                <DropdownMenuItem
+                  onClick={() => setView({ screen: "upload-video" })}
+                  className="gap-2 text-sm"
+                >
+                  <Film className="w-4 h-4 text-purple-400" />
+                  Upload Video
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setView({ screen: "upload-music" })}
+                  className="gap-2 text-sm"
+                >
+                  <Music className="w-4 h-4 text-purple-400" />
+                  Upload Music
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       )}
 

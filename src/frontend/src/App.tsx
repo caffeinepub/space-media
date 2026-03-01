@@ -26,6 +26,7 @@ import DownloadsTab from "./components/downloads/DownloadsTab";
 // Settings
 import SettingsTab from "./components/settings/SettingsTab";
 
+import StudioAnalyticsTab from "./components/studio/StudioAnalyticsTab";
 // Studio
 import StudioTab from "./components/studio/StudioTab";
 
@@ -109,6 +110,9 @@ function MainApp() {
               {activeTab === "downloads" && <DownloadsTab />}
               {activeTab === "studio" && passenger?.role === "manager" && (
                 <StudioTab />
+              )}
+              {activeTab === "analytics" && passenger?.role === "manager" && (
+                <StudioAnalyticsTab />
               )}
               {activeTab === "profile" && <SettingsTab />}
             </motion.div>

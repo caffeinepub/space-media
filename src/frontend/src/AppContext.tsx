@@ -506,7 +506,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       currentVideo: video,
       isPlaying: true,
       progress: video.resumePosition ?? 0,
-      subtitleLang: "English",
+      subtitleLang: "Off",
       audioLang: video.defaultAudioLang ?? "en",
     });
     setShowVideoPlayer(true);

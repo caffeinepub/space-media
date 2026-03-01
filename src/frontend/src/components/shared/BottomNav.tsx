@@ -1,6 +1,7 @@
 import { useApp } from "@/AppContext";
 import type { TabId } from "@/types";
 import {
+  BarChart2,
   Clapperboard,
   Download,
   Film,
@@ -26,12 +27,22 @@ export default function AppNav({ bottom = false }: AppNavProps) {
     { id: "downloads", label: "Downloads", icon: Download },
   ];
 
-  const managerOnlyTab: { id: TabId; label: string; icon: React.ElementType } =
+  const managerOnlyTabs: {
+    id: TabId;
+    label: string;
+    icon: React.ElementType;
+  }[] = [
     {
       id: "studio",
       label: "Studio",
       icon: Clapperboard,
-    };
+    },
+    {
+      id: "analytics",
+      label: "Analytics",
+      icon: BarChart2,
+    },
+  ];
 
   const profileTab: { id: TabId; label: string; icon: React.ElementType } = {
     id: "profile",
@@ -40,7 +51,7 @@ export default function AppNav({ bottom = false }: AppNavProps) {
   };
 
   const tabs = isManager
-    ? [...baseTabs, managerOnlyTab, profileTab]
+    ? [...baseTabs, ...managerOnlyTabs, profileTab]
     : [...baseTabs, profileTab];
 
   // ─── Bottom nav (mobile only) ───────────────────────────────────────────────
@@ -53,7 +64,7 @@ export default function AppNav({ bottom = false }: AppNavProps) {
       >
         {tabs.map(({ id, label, icon: Icon }) => {
           const isActive = activeTab === id;
-          const isStudio = id === "studio";
+          const isManagerTab = id === "studio" || id === "analytics";
           return (
             <button
               type="button"
@@ -67,7 +78,7 @@ export default function AppNav({ bottom = false }: AppNavProps) {
                   layoutId="tab-indicator-bottom"
                   className="absolute top-0 left-2 right-2 h-0.5 rounded-full"
                   style={{
-                    background: isStudio
+                    background: isManagerTab
                       ? "linear-gradient(90deg, oklch(0.65 0.18 290), oklch(0.55 0.22 300))"
                       : "linear-gradient(90deg, oklch(var(--theme-accent)), oklch(var(--theme-accent-2)))",
                   }}
@@ -77,7 +88,7 @@ export default function AppNav({ bottom = false }: AppNavProps) {
               <Icon
                 className={`w-5 h-5 transition-colors ${
                   isActive
-                    ? isStudio
+                    ? isManagerTab
                       ? "text-purple-400"
                       : "text-primary"
                     : "text-muted-foreground"
@@ -87,7 +98,7 @@ export default function AppNav({ bottom = false }: AppNavProps) {
               <span
                 className={`text-[10px] font-semibold transition-colors ${
                   isActive
-                    ? isStudio
+                    ? isManagerTab
                       ? "text-purple-400"
                       : "text-primary"
                     : "text-muted-foreground"
@@ -138,7 +149,7 @@ export default function AppNav({ bottom = false }: AppNavProps) {
       <nav className="flex flex-col flex-1 px-2 py-3 gap-1 overflow-y-auto scrollbar-hide">
         {tabs.map(({ id, label, icon: Icon }) => {
           const isActive = activeTab === id;
-          const isStudio = id === "studio";
+          const isManagerTab = id === "studio" || id === "analytics";
 
           return (
             <button
@@ -150,7 +161,7 @@ export default function AppNav({ bottom = false }: AppNavProps) {
                 xl:py-3
                 ${
                   isActive
-                    ? isStudio
+                    ? isManagerTab
                       ? "bg-purple-500/15 text-purple-400"
                       : "bg-primary/15 text-primary"
                     : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
@@ -162,7 +173,7 @@ export default function AppNav({ bottom = false }: AppNavProps) {
                   layoutId="sidebar-indicator"
                   className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r-full"
                   style={{
-                    background: isStudio
+                    background: isManagerTab
                       ? "linear-gradient(180deg, oklch(0.65 0.18 290), oklch(0.55 0.22 300))"
                       : "linear-gradient(180deg, oklch(var(--theme-accent)), oklch(var(--theme-accent-2)))",
                   }}

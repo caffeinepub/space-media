@@ -27,6 +27,30 @@ export interface SubtitleTrack {
   langCode: string;
 }
 
+export interface Episode {
+  id: string;
+  episodeNumber: number;
+  title: string;
+  description: string;
+  runtime: string;
+  thumbnailUrl: string;
+  resumePosition?: number; // 0-1 progress ratio (legacy static)
+  durationSeconds?: number; // for progress tracking
+}
+
+export interface Season {
+  seasonNumber: number;
+  label: string; // e.g. "Season 1"
+  episodes: Episode[];
+}
+
+export interface MoviePart {
+  partNumber: number;
+  label: string; // e.g. "Part 1"
+  videoId: string; // references a VideoContent id
+  title: string;
+}
+
 export interface VideoContent {
   id: string;
   title: string;
@@ -45,43 +69,10 @@ export interface VideoContent {
   hlsMasterUrl?: string;
   audioTracks?: AudioTrack[];
   defaultAudioLang?: string;
-}
-
-export interface MusicTrack {
-  id: string;
-  title: string;
-  artist: string;
-  album: string;
-  albumArt: string;
-  duration: number; // seconds
-  genre: string;
-  year?: number;
-}
-
-export interface Playlist {
-  id: string;
-  name: string;
-  coverArt: string;
-  trackCount: number;
-  description: string;
-  tracks?: string[]; // track ids
-}
-
-export interface Album {
-  id: string;
-  title: string;
-  artist: string;
-  coverArt: string;
-  year: number;
-  trackCount: number;
-}
-
-export interface Artist {
-  id: string;
-  name: string;
-  imageUrl: string;
-  genre: string;
-  followerCount: number;
+  // Series / multi-part
+  contentType?: "movie" | "series";
+  seasons?: Season[];
+  parts?: MoviePart[];
 }
 
 // ─── Studio ───────────────────────────────────────────────────────────────────
@@ -101,24 +92,41 @@ export interface StudioVideo {
   dateAdded: number;
   duration: string;
   isPublished: boolean;
+  // Content type system
+  contentType?: "movie" | "series";
+  seriesId?: string; // shared ID for all parts of a movie OR all episodes of a web series
+  seasonNumber?: number; // for web series episodes
+  partNumber?: number; // for multi-part movies
+  episodeNumber?: number; // for web series episodes
+  episodeTitle?: string; // episode title (series only)
 }
 
-export interface StudioMusic {
-  id: string;
-  title: string;
-  artist: string;
-  album: string;
-  genre: string;
-  language: string;
-  coverArt: string;
-  dateAdded: number;
-  duration: string;
-  isPublished: boolean;
+// ─── Episode Progress Tracking ────────────────────────────────────────────────
+
+export interface EpisodeProgress {
+  episodeId: string;
+  watchedSeconds: number;
+  durationSeconds: number; // total duration, for ratio
+  completed: boolean;
+  lastWatchedAt: number; // ms timestamp
+}
+
+export interface SeasonProgress {
+  seasonNumber: number;
+  episodes: Record<string, EpisodeProgress>; // key: episodeId
+  lastEpisodeId: string | null;
+}
+
+export interface SeriesProgress {
+  seriesVideoId: string; // the VideoContent id of the series
+  seasons: Record<number, SeasonProgress>; // key: seasonNumber
+  lastSeasonNumber: number;
+  lastEpisodeId: string | null;
 }
 
 // ─── Downloads ───────────────────────────────────────────────────────────────
 
-export type MediaType = "video" | "music";
+export type MediaType = "video";
 export type LicenseStatus = "valid" | "expired";
 
 export interface DownloadedItem {
@@ -154,29 +162,14 @@ export type ThemeId =
 
 export type DownloadQuality = "low" | "medium" | "high";
 
-export type PlayerBgId = "blue-moon" | "red-nebula";
-
 export interface AppSettings {
   theme: ThemeId;
   downloadQuality: DownloadQuality;
   passengerId: string;
-  eqBands: number[]; // 5 values, -12 to +12
-  eqPreset: string;
   simulateOffline: boolean;
-  playerBg: PlayerBgId;
 }
 
 // ─── Player State ────────────────────────────────────────────────────────────
-
-export interface MusicPlayerState {
-  currentTrack: MusicTrack | null;
-  isPlaying: boolean;
-  progress: number; // seconds
-  queue: MusicTrack[];
-  shuffle: boolean;
-  repeat: "none" | "one" | "all";
-  volume: number; // 0-1
-}
 
 export interface VideoPlayerState {
   currentVideo: VideoContent | null;
@@ -195,12 +188,11 @@ export interface ThemeDefinition {
   dataAttr: string;
 }
 
+// ─── Series Watch History ────────────────────────────────────────────────────
+
+/** Map from videoId (series root) → SeriesProgress */
+export type SeriesProgressMap = Record<string, SeriesProgress>;
+
 // ─── Navigation ──────────────────────────────────────────────────────────────
 
-export type TabId =
-  | "video"
-  | "music"
-  | "downloads"
-  | "studio"
-  | "analytics"
-  | "profile";
+export type TabId = "video" | "downloads" | "studio" | "analytics" | "profile";

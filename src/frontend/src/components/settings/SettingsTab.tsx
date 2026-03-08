@@ -5,7 +5,6 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import type { DownloadQuality } from "@/types";
 import {
-  CheckCircle,
   Clapperboard,
   LogOut,
   Shield,
@@ -14,7 +13,6 @@ import {
   WifiOff,
 } from "lucide-react";
 import { motion } from "motion/react";
-import EQPanel from "./EQPanel";
 import ThemeChooser from "./ThemeChooser";
 
 function getRoleLabel(role: string): { text: string; class: string } {
@@ -62,7 +60,7 @@ export default function SettingsTab() {
   const qualities: DownloadQuality[] = ["low", "medium", "high"];
 
   return (
-    <div className="flex flex-col h-full overflow-y-auto scrollbar-hide bg-background">
+    <div className="flex flex-col h-full overflow-y-auto scrollbar-hide bg-transparent">
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-4 pb-3">
         <h1 className="text-xl font-bold font-display text-foreground">
@@ -148,6 +146,7 @@ export default function SettingsTab() {
               variant="outline"
               size="sm"
               onClick={logout}
+              data-ocid="settings.sign_out.button"
               className="w-full gap-2 text-destructive border-destructive/30 hover:bg-destructive/10"
             >
               <LogOut className="w-4 h-4" />
@@ -156,71 +155,9 @@ export default function SettingsTab() {
           </div>
         </section>
 
-        {/* ─── Player Background ───────────────────── */}
-        <section>
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-            Player Background
-          </h3>
-          <div className="grid grid-cols-2 gap-3">
-            {/* Blue Moon option */}
-            <button
-              type="button"
-              onClick={() => updateSettings({ playerBg: "blue-moon" })}
-              className={`relative rounded-xl overflow-hidden h-20 focus-visible:ring-2 focus-visible:ring-primary ${
-                settings.playerBg === "blue-moon"
-                  ? "ring-2 ring-primary ring-offset-2 ring-offset-background"
-                  : ""
-              }`}
-            >
-              <img
-                src="/assets/uploads/BLUE-MOON-L-1.jpg"
-                alt="Blue Moon"
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-              <span className="absolute bottom-1.5 left-2 text-white text-xs font-semibold">
-                Blue Moon
-              </span>
-              {settings.playerBg === "blue-moon" && (
-                <CheckCircle className="absolute top-1.5 right-1.5 w-4 h-4 text-primary" />
-              )}
-            </button>
-            {/* Red Nebula option */}
-            <button
-              type="button"
-              onClick={() => updateSettings({ playerBg: "red-nebula" })}
-              className={`relative rounded-xl overflow-hidden h-20 focus-visible:ring-2 focus-visible:ring-primary ${
-                settings.playerBg === "red-nebula"
-                  ? "ring-2 ring-primary ring-offset-2 ring-offset-background"
-                  : ""
-              }`}
-            >
-              <img
-                src="/assets/generated/red-nebula-bg.dim_1080x1920.jpg"
-                alt="Red Nebula"
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-              <span className="absolute bottom-1.5 left-2 text-white text-xs font-semibold">
-                Red Nebula
-              </span>
-              {settings.playerBg === "red-nebula" && (
-                <CheckCircle className="absolute top-1.5 right-1.5 w-4 h-4 text-primary" />
-              )}
-            </button>
-          </div>
-        </section>
-
         {/* ─── Theme ───────────────────────────────── */}
         <section>
           <ThemeChooser />
-        </section>
-
-        {/* ─── Equalizer ───────────────────────────── */}
-        <section>
-          <div className="bg-card rounded-2xl border border-border p-4">
-            <EQPanel />
-          </div>
         </section>
 
         {/* ─── Download Quality ────────────────────── */}
@@ -235,6 +172,7 @@ export default function SettingsTab() {
                   type="button"
                   key={q}
                   onClick={() => updateSettings({ downloadQuality: q })}
+                  data-ocid={`settings.quality_${q}.toggle`}
                   className={`flex-1 py-2 rounded-lg text-sm font-semibold capitalize transition-all ${
                     settings.downloadQuality === q
                       ? "text-white"
@@ -290,6 +228,7 @@ export default function SettingsTab() {
               <Switch
                 checked={!isConnected}
                 onCheckedChange={toggleConnection}
+                data-ocid="settings.offline_mode.switch"
               />
             </div>
           </div>
@@ -298,7 +237,7 @@ export default function SettingsTab() {
         {/* Footer */}
         <div className="text-center pt-2">
           <p className="text-xs text-muted-foreground opacity-40">
-            Space Media v2.0 · Orbital Class Entertainment
+            Space Media v3.0 · Orbital Class Entertainment
           </p>
           <p className="text-xs text-muted-foreground opacity-40 mt-1">
             © {new Date().getFullYear()}.{" "}

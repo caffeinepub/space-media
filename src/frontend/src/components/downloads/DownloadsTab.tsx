@@ -7,7 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { mockTracks, mockVideos } from "@/mockData";
+import { mockVideos } from "@/mockData";
 import type { DownloadedItem } from "@/types";
 import {
   AlertTriangle,
@@ -23,7 +23,6 @@ import { toast } from "sonner";
 import LicenseExpiredModal from "./LicenseExpiredModal";
 
 type SortOption = "expiring" | "recent" | "size";
-type FilterTab = "video" | "music";
 
 function formatBytes(bytes: number): string {
   if (bytes >= 1e9) return `${(bytes / 1e9).toFixed(1)} GB`;
@@ -43,15 +42,13 @@ export default function DownloadsTab() {
     renewAllDownloads,
     isConnected,
     playVideo,
-    playTrack,
   } = useApp();
   const [query, setQuery] = useState("");
-  const [filterTab, setFilterTab] = useState<FilterTab>("video");
   const [sort, setSort] = useState<SortOption>("expiring");
   const [expiredItem, setExpiredItem] = useState<DownloadedItem | null>(null);
 
   const filtered = useMemo(() => {
-    let items = downloads.filter((d) => d.mediaType === filterTab);
+    let items = downloads.filter((d) => d.mediaType === "video");
 
     // Search
     if (query.trim()) {
@@ -59,9 +56,9 @@ export default function DownloadsTab() {
       items = items.filter(
         (d) =>
           d.title.toLowerCase().includes(q) ||
-          d.artist.toLowerCase().includes(q) ||
           d.genre.toLowerCase().includes(q) ||
-          d.album.toLowerCase().includes(q),
+          d.language.toLowerCase().includes(q) ||
+          d.tags.some((t) => t.toLowerCase().includes(q)),
       );
     }
 
@@ -79,10 +76,7 @@ export default function DownloadsTab() {
     }
 
     return items;
-  }, [downloads, filterTab, query, sort]);
-
-  const videoCount = downloads.filter((d) => d.mediaType === "video").length;
-  const musicCount = downloads.filter((d) => d.mediaType === "music").length;
+  }, [downloads, query, sort]);
 
   function handleItemClick(item: DownloadedItem) {
     const now = Date.now();
@@ -90,14 +84,9 @@ export default function DownloadsTab() {
       setExpiredItem(item);
       return;
     }
-    // Play the item
-    if (item.mediaType === "video") {
-      const video = mockVideos.find((v) => v.id === item.id);
-      if (video) playVideo(video);
-    } else {
-      const track = mockTracks.find((t) => t.id === item.id);
-      if (track) playTrack(track, mockTracks);
-    }
+    // Play the video item
+    const video = mockVideos.find((v) => v.id === item.id);
+    if (video) playVideo(video);
   }
 
   function handleDelete(id: string, title: string) {
@@ -112,7 +101,7 @@ export default function DownloadsTab() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-background overflow-hidden">
+    <div className="flex flex-col h-full bg-transparent overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-4 pb-2">
         <div className="flex items-center gap-2">
@@ -127,6 +116,7 @@ export default function DownloadsTab() {
             variant="outline"
             onClick={handleRenewAll}
             className="gap-1.5 text-xs h-8"
+            data-ocid="downloads.renew_all.button"
           >
             <RefreshCw className="w-3 h-3" />
             Renew All
@@ -142,61 +132,23 @@ export default function DownloadsTab() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search downloads..."
+          data-ocid="downloads.search_input"
           className="w-full h-10 pl-9 pr-4 rounded-xl bg-secondary text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
         />
       </div>
 
-      {/* Tabs + Sort */}
+      {/* Sort */}
       <div className="flex items-center justify-between px-4 mb-3">
-        <div className="flex gap-1 bg-secondary rounded-xl p-1">
-          <button
-            type="button"
-            onClick={() => setFilterTab("video")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
-              filterTab === "video"
-                ? "bg-card text-foreground shadow-xs"
-                : "text-muted-foreground"
-            }`}
-          >
-            Videos
-            <span
-              className={`text-xs px-1.5 py-0.5 rounded-full ${
-                filterTab === "video"
-                  ? "bg-primary/20 text-primary"
-                  : "bg-muted text-muted-foreground"
-              }`}
-            >
-              {videoCount}
-            </span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setFilterTab("music")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
-              filterTab === "music"
-                ? "bg-card text-foreground shadow-xs"
-                : "text-muted-foreground"
-            }`}
-          >
-            Music
-            <span
-              className={`text-xs px-1.5 py-0.5 rounded-full ${
-                filterTab === "music"
-                  ? "bg-primary/20 text-primary"
-                  : "bg-muted text-muted-foreground"
-              }`}
-            >
-              {musicCount}
-            </span>
-          </button>
-        </div>
-
+        <span className="text-sm text-muted-foreground">
+          {filtered.length} video{filtered.length !== 1 ? "s" : ""}
+        </span>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
               size="sm"
               className="gap-1.5 text-xs h-8 px-2"
+              data-ocid="downloads.sort.button"
             >
               <SortAsc className="w-3.5 h-3.5" />
               {sort === "expiring"
@@ -229,6 +181,7 @@ export default function DownloadsTab() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               className="flex flex-col items-center gap-3 pt-16 text-center"
+              data-ocid="downloads.empty_state"
             >
               <div className="w-14 h-14 rounded-2xl bg-secondary flex items-center justify-center mb-1">
                 <Search className="w-6 h-6 text-muted-foreground opacity-50" />
@@ -250,6 +203,7 @@ export default function DownloadsTab() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                   transition={{ delay: i * 0.04 }}
+                  data-ocid={`downloads.item.${i + 1}`}
                   className={`flex items-center gap-3 p-3 rounded-xl mb-2 transition-colors ${
                     isExpired
                       ? "bg-destructive/5 border border-destructive/20"
@@ -265,11 +219,7 @@ export default function DownloadsTab() {
                     <img
                       src={item.artworkUrl}
                       alt={item.title}
-                      className={`object-cover ${
-                        item.mediaType === "video"
-                          ? "w-10 h-14 rounded-md"
-                          : "w-12 h-12 rounded-lg"
-                      } ${isExpired ? "opacity-50" : ""}`}
+                      className={`w-10 h-14 rounded-md object-cover ${isExpired ? "opacity-50" : ""}`}
                     />
                     {isExpired && (
                       <div className="absolute inset-0 flex items-center justify-center">
@@ -288,7 +238,7 @@ export default function DownloadsTab() {
                       {item.title}
                     </p>
                     <p className="text-xs text-muted-foreground truncate">
-                      {item.mediaType === "music" ? item.artist : item.genre}
+                      {item.genre} · {item.language}
                     </p>
 
                     {/* License status */}
@@ -322,6 +272,7 @@ export default function DownloadsTab() {
                   <button
                     type="button"
                     onClick={() => handleDelete(item.id, item.title)}
+                    data-ocid={`downloads.delete_button.${i + 1}`}
                     className="w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0"
                     aria-label={`Delete ${item.title}`}
                   >

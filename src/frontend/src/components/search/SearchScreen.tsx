@@ -1,16 +1,13 @@
 import { useApp } from "@/AppContext";
 import { Badge } from "@/components/ui/badge";
-import { mockTracks, mockVideos } from "@/mockData";
-import type { MusicTrack, VideoContent } from "@/types";
-import { Download, Search, Wifi, X } from "lucide-react";
+import { mockVideos } from "@/mockData";
+import type { VideoContent } from "@/types";
+import { Download, Search, Wifi, WifiOff, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-type Tab = "video" | "music";
-
 interface SearchResult {
   id: string;
-  type: Tab;
   title: string;
   subtitle: string;
   artworkUrl: string;
@@ -19,23 +16,25 @@ interface SearchResult {
 }
 
 interface SearchScreenProps {
-  initialTab?: Tab;
+  initialTab?: "video";
 }
 
 export default function SearchScreen({
-  initialTab = "video",
+  initialTab: _initialTab = "video",
 }: SearchScreenProps) {
   const {
     setShowSearch,
     downloads,
-    playTrack,
     setSelectedVideo,
     setActiveTab,
+    isConnected,
   } = useApp();
   const [query, setQuery] = useState("");
-  const [activeTab, setTabActive] = useState<Tab>(initialTab);
   const [downloadedOnly, setDownloadedOnly] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // When offline, force downloadedOnly to true
+  const effectiveDownloadedOnly = !isConnected || downloadedOnly;
 
   useEffect(() => {
     setTimeout(() => inputRef.current?.focus(), 100);
@@ -49,78 +48,37 @@ export default function SearchScreen({
     [downloads],
   );
 
-  const downloadedMusicIds = useMemo(
-    () =>
-      new Set(
-        downloads.filter((d) => d.mediaType === "music").map((d) => d.id),
-      ),
-    [downloads],
-  );
-
   const results = useMemo<SearchResult[]>(() => {
     const q = query.toLowerCase().trim();
-
-    if (activeTab === "video") {
-      let videos = mockVideos;
-      if (downloadedOnly) {
-        videos = videos.filter((v) => downloadedVideoIds.has(v.id));
-      }
-      if (q) {
-        videos = videos.filter(
-          (v) =>
-            v.title.toLowerCase().includes(q) ||
-            v.genre.toLowerCase().includes(q) ||
-            v.language.toLowerCase().includes(q) ||
-            (v.tags ?? []).some((t) => t.toLowerCase().includes(q)),
-        );
-      }
-      return videos.map((v: VideoContent) => ({
-        id: v.id,
-        type: "video" as Tab,
-        title: v.title,
-        subtitle: `${v.genre} · ${v.runtime}`,
-        artworkUrl: v.posterUrl,
-        isDownloaded: downloadedVideoIds.has(v.id),
-        onPlay: () => {
-          setSelectedVideo(v);
-          setActiveTab("video");
-          setShowSearch(false);
-        },
-      }));
-    }
-    // Music
-    let tracks = mockTracks;
-    if (downloadedOnly) {
-      tracks = tracks.filter((t) => downloadedMusicIds.has(t.id));
+    let videos = mockVideos;
+    if (effectiveDownloadedOnly) {
+      videos = videos.filter((v) => downloadedVideoIds.has(v.id));
     }
     if (q) {
-      tracks = tracks.filter(
-        (t) =>
-          t.title.toLowerCase().includes(q) ||
-          t.artist.toLowerCase().includes(q) ||
-          t.album.toLowerCase().includes(q) ||
-          t.genre.toLowerCase().includes(q),
+      videos = videos.filter(
+        (v) =>
+          v.title.toLowerCase().includes(q) ||
+          v.genre.toLowerCase().includes(q) ||
+          v.language.toLowerCase().includes(q) ||
+          (v.tags ?? []).some((t) => t.toLowerCase().includes(q)),
       );
     }
-    return tracks.map((t: MusicTrack) => ({
-      id: t.id,
-      type: "music" as Tab,
-      title: t.title,
-      subtitle: `${t.artist} · ${t.album}`,
-      artworkUrl: t.albumArt,
-      isDownloaded: downloadedMusicIds.has(t.id),
+    return videos.map((v: VideoContent) => ({
+      id: v.id,
+      title: v.title,
+      subtitle: `${v.genre} · ${v.runtime}`,
+      artworkUrl: v.posterUrl,
+      isDownloaded: downloadedVideoIds.has(v.id),
       onPlay: () => {
-        playTrack(t, mockTracks);
+        setSelectedVideo(v);
+        setActiveTab("video");
         setShowSearch(false);
       },
     }));
   }, [
     query,
-    activeTab,
-    downloadedOnly,
+    effectiveDownloadedOnly,
     downloadedVideoIds,
-    downloadedMusicIds,
-    playTrack,
     setShowSearch,
     setSelectedVideo,
     setActiveTab,
@@ -134,6 +92,16 @@ export default function SearchScreen({
       transition={{ duration: 0.2 }}
       className="fixed inset-0 z-40 flex flex-col bg-background"
     >
+      {/* Offline banner */}
+      {!isConnected && (
+        <div className="flex items-center gap-2 px-4 py-2.5 bg-red-500/10 border-b border-red-500/20">
+          <WifiOff className="w-3.5 h-3.5 text-red-400 shrink-0" />
+          <p className="text-xs font-medium text-red-400">
+            Offline — showing downloaded content only
+          </p>
+        </div>
+      )}
+
       {/* Search bar */}
       <div className="flex items-center gap-3 px-4 pt-4 pb-3">
         <div className="flex-1 relative">
@@ -143,7 +111,10 @@ export default function SearchScreen({
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search videos, music..."
+            placeholder={
+              isConnected ? "Search videos..." : "Search downloaded videos..."
+            }
+            data-ocid="search.search_input"
             className="w-full h-11 pl-9 pr-4 rounded-xl bg-secondary text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
           />
           {query && (
@@ -159,51 +130,33 @@ export default function SearchScreen({
         <button
           type="button"
           onClick={() => setShowSearch(false)}
+          data-ocid="search.cancel.button"
           className="text-sm font-semibold text-primary"
         >
           Cancel
         </button>
       </div>
 
-      {/* Tab switcher */}
-      <div className="flex gap-1 px-4 mb-3">
-        {(["video", "music"] as Tab[]).map((tab) => (
-          <button
-            type="button"
-            key={tab}
-            onClick={() => setTabActive(tab)}
-            className={`px-4 py-1.5 rounded-full text-sm font-semibold capitalize transition-all ${
-              activeTab === tab
-                ? "text-white"
-                : "text-muted-foreground bg-secondary"
-            }`}
-            style={
-              activeTab === tab
-                ? {
-                    background:
-                      "linear-gradient(90deg, oklch(var(--theme-accent)), oklch(var(--theme-accent-2)))",
-                  }
-                : undefined
-            }
-          >
-            {tab === "video" ? "Videos" : "Music"}
-          </button>
-        ))}
-      </div>
-
       {/* Filter row */}
       <div className="flex gap-2 px-4 mb-3">
         <button
           type="button"
-          onClick={() => setDownloadedOnly((v) => !v)}
+          onClick={() => {
+            if (isConnected) setDownloadedOnly((v) => !v);
+          }}
+          disabled={!isConnected}
+          data-ocid="search.downloaded_only.toggle"
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all border ${
-            downloadedOnly
+            effectiveDownloadedOnly
               ? "bg-primary/20 text-primary border-primary/30"
               : "bg-secondary text-muted-foreground border-border"
-          }`}
+          } ${!isConnected ? "opacity-80 cursor-default" : ""}`}
         >
           <Download className="w-3 h-3" />
           Downloaded Only
+          {!isConnected && (
+            <span className="ml-0.5 text-[10px] opacity-70">(forced)</span>
+          )}
         </button>
       </div>
 
@@ -216,13 +169,16 @@ export default function SearchScreen({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               className="flex flex-col items-center gap-3 pt-16 text-center"
+              data-ocid="search.empty_state"
             >
               <Search className="w-10 h-10 text-muted-foreground opacity-30" />
               <p className="text-sm text-muted-foreground">
                 {query
                   ? `No results for "${query}"`
-                  : downloadedOnly
-                    ? "No downloaded content yet"
+                  : effectiveDownloadedOnly
+                    ? !isConnected
+                      ? "No downloaded videos available offline"
+                      : "No downloaded videos yet"
                     : "Start typing to search"}
               </p>
             </motion.div>
@@ -243,18 +199,16 @@ export default function SearchScreen({
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.03 }}
                   onClick={result.onPlay}
+                  data-ocid={`search.item.${i + 1}`}
                   className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-secondary transition-colors focus:outline-none"
                 >
                   <img
                     src={result.artworkUrl}
                     alt={result.title}
-                    className={`w-12 h-12 object-cover shrink-0 ${
-                      result.type === "music" ? "rounded-lg" : "rounded-md"
-                    }`}
+                    className="rounded-md object-cover shrink-0"
                     style={{
-                      aspectRatio: result.type === "video" ? "2/3" : "1/1",
                       width: 48,
-                      height: result.type === "video" ? 72 : 48,
+                      height: 72,
                     }}
                   />
                   <div className="flex-1 min-w-0 text-left">

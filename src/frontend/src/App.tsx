@@ -12,11 +12,6 @@ import VideoDetail from "./components/video/VideoDetail";
 import VideoHome from "./components/video/VideoHome";
 import VideoPlayer from "./components/video/VideoPlayer";
 
-import MiniPlayer from "./components/music/MiniPlayer";
-// Music
-import MusicHome from "./components/music/MusicHome";
-import MusicPlayer from "./components/music/MusicPlayer";
-
 // Search
 import SearchScreen from "./components/search/SearchScreen";
 
@@ -64,22 +59,34 @@ function AuthShell() {
 function MainApp() {
   const {
     activeTab,
-    musicPlayer,
-    showMusicPlayer,
-    setShowMusicPlayer,
     showVideoPlayer,
     showSearch,
     searchInitialTab,
     selectedVideo,
     setSelectedVideo,
     passenger,
+    settings,
   } = useApp();
 
-  const hasMusicTrack = !!musicPlayer.currentTrack;
+  const themeBgUrl = `/assets/generated/theme-${settings.theme}.dim_400x200.jpg`;
 
   return (
     // On md+: flex-row so sidebar sits on the left, content fills rest
-    <div className="w-full h-dvh flex flex-col md:flex-row overflow-hidden relative bg-background">
+    <div className="w-full h-dvh flex flex-col md:flex-row overflow-hidden relative bg-transparent">
+      {/* ── Theme background (fixed, behind all content) ── */}
+      <div
+        aria-hidden="true"
+        style={{
+          backgroundImage: `url("${themeBgUrl}")`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+          transition: "background-image 0.6s ease",
+        }}
+        className="fixed inset-0 -z-10"
+      />
+      {/* Dark overlay so text stays readable */}
+      <div aria-hidden="true" className="fixed inset-0 -z-10 bg-black/60" />
       {/* Sidebar nav — visible on md+ */}
       <AppNav />
 
@@ -106,7 +113,6 @@ function MainApp() {
                 ) : (
                   <VideoHome onSelectVideo={setSelectedVideo} />
                 ))}
-              {activeTab === "music" && <MusicHome />}
               {activeTab === "downloads" && <DownloadsTab />}
               {activeTab === "studio" && passenger?.role === "manager" && (
                 <StudioTab />
@@ -119,23 +125,9 @@ function MainApp() {
           </AnimatePresence>
         </div>
 
-        {/* Mini player — hidden on md+ when sidebar already provides layout context */}
-        <AnimatePresence>
-          {hasMusicTrack && !showMusicPlayer && (
-            <MiniPlayer onExpand={() => setShowMusicPlayer(true)} />
-          )}
-        </AnimatePresence>
-
         {/* Bottom nav — mobile only (md+ uses sidebar in AppNav) */}
         <AppNav bottom />
       </div>
-
-      {/* Full music player overlay */}
-      <AnimatePresence>
-        {showMusicPlayer && hasMusicTrack && (
-          <MusicPlayer onClose={() => setShowMusicPlayer(false)} />
-        )}
-      </AnimatePresence>
 
       {/* Video player overlay */}
       <AnimatePresence>{showVideoPlayer && <VideoPlayer />}</AnimatePresence>

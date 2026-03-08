@@ -91,14 +91,36 @@ export default function ContentRow({
                   </div>
                 )}
 
-                {/* Audio languages badge */}
-                {video.audioTracks && video.audioTracks.length > 1 && (
+                {/* Series badge */}
+                {video.contentType === "series" && (
                   <div className="absolute top-1.5 left-1.5">
-                    <span className="text-[9px] font-bold px-1 py-0.5 rounded bg-black/70 text-white/90">
-                      {video.audioTracks.length} LANG
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-primary/90 text-white">
+                      SERIES
                     </span>
                   </div>
                 )}
+
+                {/* Multi-part badge */}
+                {video.contentType === "movie" &&
+                  video.parts &&
+                  video.parts.length > 1 && (
+                    <div className="absolute top-1.5 left-1.5">
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-white/20 text-white border border-white/30">
+                        {video.parts.length} PARTS
+                      </span>
+                    </div>
+                  )}
+
+                {/* Audio languages badge */}
+                {video.audioTracks &&
+                  video.audioTracks.length > 1 &&
+                  !video.contentType && (
+                    <div className="absolute top-1.5 left-1.5">
+                      <span className="text-[9px] font-bold px-1 py-0.5 rounded bg-black/70 text-white/90">
+                        {video.audioTracks.length} LANG
+                      </span>
+                    </div>
+                  )}
 
                 {/* Hover overlay */}
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">

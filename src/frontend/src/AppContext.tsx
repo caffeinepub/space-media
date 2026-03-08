@@ -6,17 +6,15 @@ import React, {
   useEffect,
   type ReactNode,
 } from "react";
-import { mockVideos, seedStudioMusic, seedStudioVideos } from "./mockData";
+import { mockVideos, seedStudioVideos } from "./mockData";
 import type {
   AppSettings,
   AudioTrack,
   DownloadQuality,
   DownloadedItem,
-  MusicPlayerState,
-  MusicTrack,
+  EpisodeProgress,
   Passenger,
-  PlayerBgId,
-  StudioMusic,
+  SeriesProgressMap,
   StudioVideo,
   TabId,
   ThemeId,
@@ -33,7 +31,7 @@ const KEYS = {
   SETTINGS: "sm_settings",
   CONNECTION: "sm_connection",
   STUDIO_VIDEOS: "sm_studio_videos",
-  STUDIO_MUSIC: "sm_studio_music",
+  SERIES_PROGRESS: "sm_series_progress",
 };
 
 // ─── Default Values ───────────────────────────────────────────────────────────
@@ -43,10 +41,7 @@ function getDefaultSettings(passengerId: string): AppSettings {
     theme: "nebula",
     downloadQuality: "medium",
     passengerId,
-    eqBands: [0, 0, 0, 0, 0],
-    eqPreset: "Flat",
     simulateOffline: false,
-    playerBg: "blue-moon",
   };
 }
 
@@ -90,22 +85,6 @@ function seedDownloads(passengerId: string, role: string): DownloadedItem[] {
       sizeBytes: 4_800_000_000,
     },
     {
-      id: "dl2",
-      title: "Cosmic Drift",
-      mediaType: "music",
-      artworkUrl: "https://picsum.photos/seed/t1cosmic/300/300",
-      downloadedAt: getDaysAgo(10),
-      expiresAt: getDaysFromNow(licenceDays - 10),
-      licenseStatus: "valid",
-      genre: "Electronic",
-      language: "Instrumental",
-      artist: "Luna Vera",
-      album: "Stellar Dreams",
-      tags: ["ambient", "chill"],
-      passengerId,
-      sizeBytes: 12_000_000,
-    },
-    {
       id: "dl3",
       title: "Dark Matter",
       mediaType: "video",
@@ -122,20 +101,20 @@ function seedDownloads(passengerId: string, role: string): DownloadedItem[] {
       sizeBytes: 6_200_000_000,
     },
     {
-      id: "dl4",
-      title: "Solar Winds",
-      mediaType: "music",
-      artworkUrl: "https://picsum.photos/seed/t2solar/300/300",
+      id: "dl_nebula",
+      title: "Nebula Station S1",
+      mediaType: "video",
+      artworkUrl: "https://picsum.photos/seed/v5nebula/300/450",
       downloadedAt: getDaysAgo(2),
-      expiresAt: getDaysFromNow(45),
+      expiresAt: getDaysFromNow(licenceDays - 2),
       licenseStatus: "valid",
-      genre: "Indie",
+      genre: "Sci-Fi",
       language: "English",
-      artist: "The Astronauts",
-      album: "Beyond the Horizon",
-      tags: ["indie", "space"],
+      artist: "",
+      album: "",
+      tags: ["series", "space", "station"],
       passengerId,
-      sizeBytes: 9_800_000,
+      sizeBytes: 8_500_000_000,
     },
   ];
 }
@@ -169,20 +148,6 @@ interface AppContextType {
   activeTab: TabId;
   setActiveTab: (tab: TabId) => void;
 
-  // Music Player
-  musicPlayer: MusicPlayerState;
-  playTrack: (track: MusicTrack, queue?: MusicTrack[]) => void;
-  pauseMusic: () => void;
-  resumeMusic: () => void;
-  nextTrack: () => void;
-  prevTrack: () => void;
-  toggleShuffle: () => void;
-  toggleRepeat: () => void;
-  setMusicProgress: (seconds: number) => void;
-  setVolume: (v: number) => void;
-  showMusicPlayer: boolean;
-  setShowMusicPlayer: (v: boolean) => void;
-
   // Video Player
   videoPlayer: VideoPlayerState;
   playVideo: (video: VideoContent) => void;
@@ -196,8 +161,8 @@ interface AppContextType {
   // Search
   showSearch: boolean;
   setShowSearch: (v: boolean) => void;
-  searchInitialTab: "video" | "music";
-  setSearchInitialTab: (t: "video" | "music") => void;
+  searchInitialTab: "video";
+  setSearchInitialTab: (t: "video") => void;
 
   // Video Detail
   selectedVideo: VideoContent | null;
@@ -205,15 +170,29 @@ interface AppContextType {
 
   // Studio
   studioVideos: StudioVideo[];
-  studioMusic: StudioMusic[];
   addStudioVideo: (v: StudioVideo) => void;
   updateStudioVideo: (id: string, updates: Partial<StudioVideo>) => void;
   deleteStudioVideo: (id: string) => void;
   addAudioTrackToVideo: (videoId: string, track: AudioTrack) => void;
   removeAudioTrackFromVideo: (videoId: string, trackId: string) => void;
-  addStudioMusic: (m: StudioMusic) => void;
-  updateStudioMusic: (id: string, updates: Partial<StudioMusic>) => void;
-  deleteStudioMusic: (id: string) => void;
+
+  // Series Watch Progress
+  seriesProgress: SeriesProgressMap;
+  getEpisodeProgress: (
+    videoId: string,
+    seasonNumber: number,
+    episodeId: string,
+  ) => EpisodeProgress | null;
+  setEpisodeProgress: (
+    videoId: string,
+    seasonNumber: number,
+    episodeId: string,
+    seconds: number,
+    durationSeconds: number,
+  ) => void;
+  getSeriesResumeInfo: (
+    videoId: string,
+  ) => { seasonNumber: number; episodeId: string; seconds: number } | null;
 }
 
 // ─── Context ──────────────────────────────────────────────────────────────────
@@ -232,10 +211,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<AppSettings>(() => {
     const saved = getFromLocalStorage<AppSettings | null>(KEYS.SETTINGS, null);
     if (!saved) return getDefaultSettings("");
-    // Backfill playerBg if missing from older saved settings
     return {
-      ...saved,
-      playerBg: saved.playerBg ?? ("blue-moon" as PlayerBgId),
+      theme: saved.theme ?? "nebula",
+      downloadQuality: saved.downloadQuality ?? "medium",
+      passengerId: saved.passengerId ?? "",
+      simulateOffline: saved.simulateOffline ?? false,
     };
   });
 
@@ -244,12 +224,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
 
   const [activeTab, setActiveTab] = useState<TabId>("video");
-  const [showMusicPlayer, setShowMusicPlayer] = useState(false);
   const [showVideoPlayer, setShowVideoPlayer] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
-  const [searchInitialTab, setSearchInitialTab] = useState<"video" | "music">(
-    "video",
-  );
+  const [searchInitialTab] = useState<"video">("video");
   const [selectedVideo, setSelectedVideo] = useState<VideoContent | null>(null);
 
   // Studio state
@@ -265,27 +242,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return saved;
   });
 
-  const [studioMusic, setStudioMusic] = useState<StudioMusic[]>(() => {
-    const saved = getFromLocalStorage<StudioMusic[] | null>(
-      KEYS.STUDIO_MUSIC,
-      null,
-    );
-    if (!saved || saved.length === 0) {
-      setToLocalStorage(KEYS.STUDIO_MUSIC, seedStudioMusic);
-      return seedStudioMusic;
-    }
-    return saved;
-  });
-
-  const [musicPlayer, setMusicPlayer] = useState<MusicPlayerState>({
-    currentTrack: null,
-    isPlaying: false,
-    progress: 0,
-    queue: [],
-    shuffle: false,
-    repeat: "none",
-    volume: 0.8,
-  });
+  const [seriesProgress, setSeriesProgress] = useState<SeriesProgressMap>(() =>
+    getFromLocalStorage<SeriesProgressMap>(KEYS.SERIES_PROGRESS, {}),
+  );
 
   const [videoPlayer, setVideoPlayer] = useState<VideoPlayerState>({
     currentVideo: null,
@@ -332,19 +291,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setToLocalStorage(KEYS.SETTINGS, newSettings);
       setSettings(newSettings);
     } else {
-      setSettings(savedSettings);
+      setSettings({
+        theme: savedSettings.theme ?? "nebula",
+        downloadQuality: savedSettings.downloadQuality ?? "medium",
+        passengerId: savedSettings.passengerId ?? p.id,
+        simulateOffline: savedSettings.simulateOffline ?? false,
+      });
     }
   }, []);
 
   const logout = useCallback(() => {
     setToLocalStorage(KEYS.PASSENGER, null);
     setPassenger(null);
-    setMusicPlayer((prev) => ({
-      ...prev,
-      currentTrack: null,
-      isPlaying: false,
-    }));
-    setShowMusicPlayer(false);
     setShowVideoPlayer(false);
   }, []);
 
@@ -423,80 +381,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setToLocalStorage(KEYS.CONNECTION, next);
       return next;
     });
-  }, []);
-
-  // ─── Music Player ─────────────────────────────────────────────────────────
-
-  const playTrack = useCallback((track: MusicTrack, queue?: MusicTrack[]) => {
-    setMusicPlayer((prev) => ({
-      ...prev,
-      currentTrack: track,
-      isPlaying: true,
-      progress: 0,
-      queue: queue ?? prev.queue,
-    }));
-  }, []);
-
-  const pauseMusic = useCallback(() => {
-    setMusicPlayer((prev) => ({ ...prev, isPlaying: false }));
-  }, []);
-
-  const resumeMusic = useCallback(() => {
-    setMusicPlayer((prev) => ({ ...prev, isPlaying: true }));
-  }, []);
-
-  const nextTrack = useCallback(() => {
-    setMusicPlayer((prev) => {
-      if (!prev.queue.length) return prev;
-      const idx = prev.queue.findIndex((t) => t.id === prev.currentTrack?.id);
-      let nextIdx: number;
-      if (prev.shuffle) {
-        nextIdx = Math.floor(Math.random() * prev.queue.length);
-      } else {
-        nextIdx = (idx + 1) % prev.queue.length;
-      }
-      return {
-        ...prev,
-        currentTrack: prev.queue[nextIdx],
-        progress: 0,
-        isPlaying: true,
-      };
-    });
-  }, []);
-
-  const prevTrack = useCallback(() => {
-    setMusicPlayer((prev) => {
-      if (prev.progress > 5) return { ...prev, progress: 0 };
-      if (!prev.queue.length) return prev;
-      const idx = prev.queue.findIndex((t) => t.id === prev.currentTrack?.id);
-      const prevIdx = (idx - 1 + prev.queue.length) % prev.queue.length;
-      return {
-        ...prev,
-        currentTrack: prev.queue[prevIdx],
-        progress: 0,
-        isPlaying: true,
-      };
-    });
-  }, []);
-
-  const toggleShuffle = useCallback(() => {
-    setMusicPlayer((prev) => ({ ...prev, shuffle: !prev.shuffle }));
-  }, []);
-
-  const toggleRepeat = useCallback(() => {
-    setMusicPlayer((prev) => {
-      const next: "none" | "one" | "all" =
-        prev.repeat === "none" ? "all" : prev.repeat === "all" ? "one" : "none";
-      return { ...prev, repeat: next };
-    });
-  }, []);
-
-  const setMusicProgress = useCallback((seconds: number) => {
-    setMusicPlayer((prev) => ({ ...prev, progress: seconds }));
-  }, []);
-
-  const setVolume = useCallback((v: number) => {
-    setMusicPlayer((prev) => ({ ...prev, volume: v }));
   }, []);
 
   // ─── Video Player ─────────────────────────────────────────────────────────
@@ -589,56 +473,88 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [],
   );
 
-  const addStudioMusic = useCallback((m: StudioMusic) => {
-    setStudioMusic((prev) => {
-      const next = [...prev, m];
-      setToLocalStorage(KEYS.STUDIO_MUSIC, next);
-      return next;
-    });
-  }, []);
+  // ─── Series Watch Progress ────────────────────────────────────────────────
 
-  const updateStudioMusic = useCallback(
-    (id: string, updates: Partial<StudioMusic>) => {
-      setStudioMusic((prev) => {
-        const next = prev.map((m) => (m.id === id ? { ...m, ...updates } : m));
-        setToLocalStorage(KEYS.STUDIO_MUSIC, next);
+  const getEpisodeProgress = useCallback(
+    (
+      videoId: string,
+      seasonNumber: number,
+      episodeId: string,
+    ): EpisodeProgress | null => {
+      return (
+        seriesProgress[videoId]?.seasons[seasonNumber]?.episodes[episodeId] ??
+        null
+      );
+    },
+    [seriesProgress],
+  );
+
+  const setEpisodeProgress = useCallback(
+    (
+      videoId: string,
+      seasonNumber: number,
+      episodeId: string,
+      seconds: number,
+      durationSeconds: number,
+    ) => {
+      setSeriesProgress((prev) => {
+        const series = prev[videoId] ?? {
+          seriesVideoId: videoId,
+          seasons: {},
+          lastSeasonNumber: seasonNumber,
+          lastEpisodeId: episodeId,
+        };
+        const season = series.seasons[seasonNumber] ?? {
+          seasonNumber,
+          episodes: {},
+          lastEpisodeId: episodeId,
+        };
+        const ep: EpisodeProgress = {
+          episodeId,
+          watchedSeconds: seconds,
+          durationSeconds,
+          completed: durationSeconds > 0 && seconds / durationSeconds >= 0.9,
+          lastWatchedAt: Date.now(),
+        };
+        const updatedSeason = {
+          ...season,
+          episodes: { ...season.episodes, [episodeId]: ep },
+          lastEpisodeId: episodeId,
+        };
+        const updatedSeries = {
+          ...series,
+          seasons: { ...series.seasons, [seasonNumber]: updatedSeason },
+          lastSeasonNumber: seasonNumber,
+          lastEpisodeId: episodeId,
+        };
+        const next = { ...prev, [videoId]: updatedSeries };
+        setToLocalStorage(KEYS.SERIES_PROGRESS, next);
         return next;
       });
     },
     [],
   );
 
-  const deleteStudioMusic = useCallback((id: string) => {
-    setStudioMusic((prev) => {
-      const next = prev.filter((m) => m.id !== id);
-      setToLocalStorage(KEYS.STUDIO_MUSIC, next);
-      return next;
-    });
-  }, []);
+  const getSeriesResumeInfo = useCallback(
+    (
+      videoId: string,
+    ): { seasonNumber: number; episodeId: string; seconds: number } | null => {
+      const sp = seriesProgress[videoId];
+      if (!sp || !sp.lastEpisodeId) return null;
+      const ep = sp.seasons[sp.lastSeasonNumber]?.episodes[sp.lastEpisodeId];
+      if (!ep || ep.completed) return null;
+      return {
+        seasonNumber: sp.lastSeasonNumber,
+        episodeId: sp.lastEpisodeId,
+        seconds: ep.watchedSeconds,
+      };
+    },
+    [seriesProgress],
+  );
 
-  // Simulate music progress
-  useEffect(() => {
-    if (!musicPlayer.isPlaying || !musicPlayer.currentTrack) return;
-    const interval = setInterval(() => {
-      setMusicPlayer((prev) => {
-        if (!prev.currentTrack || !prev.isPlaying) return prev;
-        const newProgress = prev.progress + 1;
-        if (newProgress >= prev.currentTrack.duration) {
-          if (prev.repeat === "one") return { ...prev, progress: 0 };
-          if (prev.queue.length > 1 || prev.repeat === "all") {
-            const idx = prev.queue.findIndex(
-              (t) => t.id === prev.currentTrack?.id,
-            );
-            const nextIdx = (idx + 1) % prev.queue.length;
-            return { ...prev, currentTrack: prev.queue[nextIdx], progress: 0 };
-          }
-          return { ...prev, isPlaying: false, progress: 0 };
-        }
-        return { ...prev, progress: newProgress };
-      });
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [musicPlayer.isPlaying, musicPlayer.currentTrack]);
+  const setSearchInitialTab = useCallback((_t: "video") => {
+    // Always video-only; no-op setter kept for API compatibility
+  }, []);
 
   const value: AppContextType = {
     passenger,
@@ -657,18 +573,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     toggleConnection,
     activeTab,
     setActiveTab,
-    musicPlayer,
-    playTrack,
-    pauseMusic,
-    resumeMusic,
-    nextTrack,
-    prevTrack,
-    toggleShuffle,
-    toggleRepeat,
-    setMusicProgress,
-    setVolume,
-    showMusicPlayer,
-    setShowMusicPlayer,
     videoPlayer,
     playVideo,
     closeVideoPlayer,
@@ -684,15 +588,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     selectedVideo,
     setSelectedVideo,
     studioVideos,
-    studioMusic,
     addStudioVideo,
     updateStudioVideo,
     deleteStudioVideo,
     addAudioTrackToVideo,
     removeAudioTrackFromVideo,
-    addStudioMusic,
-    updateStudioMusic,
-    deleteStudioMusic,
+    seriesProgress,
+    getEpisodeProgress,
+    setEpisodeProgress,
+    getSeriesResumeInfo,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

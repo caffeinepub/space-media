@@ -5,7 +5,6 @@ import {
   Clapperboard,
   Download,
   Film,
-  Music,
   Rocket,
   User,
 } from "lucide-react";
@@ -17,13 +16,11 @@ interface AppNavProps {
 }
 
 export default function AppNav({ bottom = false }: AppNavProps) {
-  const { activeTab, setActiveTab, passenger, musicPlayer } = useApp();
+  const { activeTab, setActiveTab, passenger } = useApp();
   const isManager = passenger?.role === "manager";
-  const hasMusicTrack = !!musicPlayer.currentTrack;
 
   const baseTabs: { id: TabId; label: string; icon: React.ElementType }[] = [
     { id: "video", label: "Video", icon: Film },
-    { id: "music", label: "Music", icon: Music },
     { id: "downloads", label: "Downloads", icon: Download },
   ];
 
@@ -70,6 +67,7 @@ export default function AppNav({ bottom = false }: AppNavProps) {
               type="button"
               key={id}
               onClick={() => setActiveTab(id)}
+              data-ocid={`nav.${id}.tab`}
               className="flex-1 flex flex-col items-center justify-center py-2 gap-0.5 relative min-h-[56px] focus-visible:outline-none focus-visible:bg-secondary/50"
               aria-current={isActive ? "page" : undefined}
             >
@@ -157,6 +155,7 @@ export default function AppNav({ bottom = false }: AppNavProps) {
               key={id}
               onClick={() => setActiveTab(id)}
               aria-current={isActive ? "page" : undefined}
+              data-ocid={`nav.${id}.tab`}
               className={`relative flex items-center gap-3 rounded-xl px-2.5 py-2.5 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background
                 xl:py-3
                 ${
@@ -192,53 +191,6 @@ export default function AppNav({ bottom = false }: AppNavProps) {
           );
         })}
       </nav>
-
-      {/* Now playing indicator in sidebar — shows on md when mini player is hidden */}
-      {hasMusicTrack && (
-        <div className="border-t border-border px-2 py-3">
-          <button
-            type="button"
-            onClick={() => setActiveTab("music")}
-            className="w-full flex items-center gap-2 px-2 py-2 rounded-xl hover:bg-secondary/60 transition-colors text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-          >
-            <div className="w-7 h-7 rounded-lg overflow-hidden shrink-0">
-              <img
-                src={musicPlayer.currentTrack!.albumArt}
-                alt=""
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="hidden lg:block flex-1 min-w-0">
-              <p className="text-xs font-semibold text-foreground truncate leading-none">
-                {musicPlayer.currentTrack!.title}
-              </p>
-              <p className="text-[10px] text-muted-foreground truncate mt-0.5">
-                {musicPlayer.currentTrack!.artist}
-              </p>
-            </div>
-            {musicPlayer.isPlaying && (
-              <div className="hidden lg:flex items-end gap-0.5 h-4 shrink-0">
-                {[1, 2, 3].map((i) => (
-                  <motion.div
-                    key={i}
-                    className="w-0.5 rounded-full"
-                    style={{
-                      background: "oklch(var(--theme-accent))",
-                    }}
-                    animate={{ height: ["8px", "14px", "6px", "12px", "8px"] }}
-                    transition={{
-                      duration: 0.8,
-                      repeat: Number.POSITIVE_INFINITY,
-                      delay: i * 0.15,
-                      ease: "easeInOut",
-                    }}
-                  />
-                ))}
-              </div>
-            )}
-          </button>
-        </div>
-      )}
     </aside>
   );
 }

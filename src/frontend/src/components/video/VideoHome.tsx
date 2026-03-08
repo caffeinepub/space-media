@@ -1,4 +1,5 @@
 import { useApp } from "@/AppContext";
+import OfflinePlaceholder from "@/components/shared/OfflinePlaceholder";
 import StatusPill from "@/components/shared/StatusPill";
 import { mockVideos } from "@/mockData";
 import type { VideoContent } from "@/types";
@@ -14,7 +15,7 @@ interface VideoHomeProps {
 }
 
 export default function VideoHome({ onSelectVideo }: VideoHomeProps) {
-  const { setShowSearch, setSearchInitialTab } = useApp();
+  const { setShowSearch, setSearchInitialTab, isConnected } = useApp();
   const [selectedGenre, setSelectedGenre] = useState("All");
 
   const featuredVideo = mockVideos[0];
@@ -24,7 +25,15 @@ export default function VideoHome({ onSelectVideo }: VideoHomeProps) {
     [],
   );
 
-  const trending = useMemo(() => mockVideos.slice(1, 8), []);
+  const webSeries = useMemo(
+    () => mockVideos.filter((v) => v.contentType === "series"),
+    [],
+  );
+
+  const trending = useMemo(
+    () => mockVideos.filter((v) => v.contentType !== "series").slice(1, 8),
+    [],
+  );
   const recentlyAdded = useMemo(() => mockVideos.slice(-5), []);
 
   const genreFiltered = useMemo(() => {
@@ -37,8 +46,12 @@ export default function VideoHome({ onSelectVideo }: VideoHomeProps) {
     setShowSearch(true);
   }
 
+  if (!isConnected) {
+    return <OfflinePlaceholder context="video" />;
+  }
+
   return (
-    <div className="flex flex-col h-full overflow-y-auto scrollbar-hide bg-background">
+    <div className="flex flex-col h-full overflow-y-auto scrollbar-hide bg-transparent">
       {/* Hero Banner + overlaid top bar + overlaid genre pills — all in one relative container */}
       <div className="relative">
         <HeroBanner video={featuredVideo} onMoreInfo={onSelectVideo} />
@@ -113,6 +126,14 @@ export default function VideoHome({ onSelectVideo }: VideoHomeProps) {
         videos={trending}
         onSelect={onSelectVideo}
       />
+
+      {webSeries.length > 0 && (
+        <ContentRow
+          title="Web Series"
+          videos={webSeries}
+          onSelect={onSelectVideo}
+        />
+      )}
 
       {selectedGenre !== "All" && (
         <ContentRow

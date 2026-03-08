@@ -3,84 +3,54 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import type { StudioMusic, StudioVideo } from "@/types";
-import { Eye, EyeOff, Film, Music, Pencil, Search, Trash2 } from "lucide-react";
+import type { StudioVideo } from "@/types";
+import { Eye, EyeOff, Film, Pencil, Search, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import StudioDeleteModal from "./StudioDeleteModal";
 
-type FilterType = "all" | "videos" | "music" | "published" | "unpublished";
+type FilterType = "all" | "published" | "unpublished";
 
 interface StudioLibraryProps {
   onEditVideo: (id: string) => void;
-  onEditMusic: (id: string) => void;
 }
 
-type LibraryItem =
-  | ({ kind: "video" } & StudioVideo)
-  | ({ kind: "music" } & StudioMusic);
-
-function getStatusBadge(
-  item: StudioVideo | StudioMusic,
-  kind: "video" | "music",
-) {
-  if (kind === "video") {
-    const v = item as StudioVideo;
-    switch (v.processingStatus) {
-      case "processing":
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-400">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-            Processing
-          </span>
-        );
-      case "failed":
-        return (
-          <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-destructive/20 text-destructive">
-            Failed
-          </span>
-        );
-      case "ready":
-        return v.isPublished ? (
-          <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-green-500/20 text-green-400">
-            Published
-          </span>
-        ) : (
-          <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-muted text-muted-foreground">
-            Draft
-          </span>
-        );
-      default:
-        return (
-          <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-muted text-muted-foreground">
-            Unpublished
-          </span>
-        );
-    }
+function getStatusBadge(item: StudioVideo) {
+  switch (item.processingStatus) {
+    case "processing":
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-400">
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+          Processing
+        </span>
+      );
+    case "failed":
+      return (
+        <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-destructive/20 text-destructive">
+          Failed
+        </span>
+      );
+    case "ready":
+      return item.isPublished ? (
+        <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-green-500/20 text-green-400">
+          Published
+        </span>
+      ) : (
+        <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-muted text-muted-foreground">
+          Draft
+        </span>
+      );
+    default:
+      return (
+        <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-muted text-muted-foreground">
+          Unpublished
+        </span>
+      );
   }
-  return (item as StudioMusic).isPublished ? (
-    <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-green-500/20 text-green-400">
-      Published
-    </span>
-  ) : (
-    <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-muted text-muted-foreground">
-      Draft
-    </span>
-  );
 }
 
-export default function StudioLibrary({
-  onEditVideo,
-  onEditMusic,
-}: StudioLibraryProps) {
-  const {
-    studioVideos,
-    studioMusic,
-    deleteStudioVideo,
-    deleteStudioMusic,
-    updateStudioVideo,
-    updateStudioMusic,
-  } = useApp();
+export default function StudioLibrary({ onEditVideo }: StudioLibraryProps) {
+  const { studioVideos, deleteStudioVideo, updateStudioVideo } = useApp();
 
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<FilterType>("all");
@@ -88,27 +58,11 @@ export default function StudioLibrary({
   const [deleteTarget, setDeleteTarget] = useState<{
     id: string;
     title: string;
-    kind: "video" | "music";
   } | null>(null);
 
-  const allItems: LibraryItem[] = useMemo(() => {
-    const videos: LibraryItem[] = studioVideos.map((v) => ({
-      kind: "video",
-      ...v,
-    }));
-    const music: LibraryItem[] = studioMusic.map((m) => ({
-      kind: "music",
-      ...m,
-    }));
-    return [...videos, ...music].sort((a, b) => b.dateAdded - a.dateAdded);
-  }, [studioVideos, studioMusic]);
-
   const filtered = useMemo(() => {
-    let items = allItems;
-    if (filter === "videos") items = items.filter((i) => i.kind === "video");
-    else if (filter === "music")
-      items = items.filter((i) => i.kind === "music");
-    else if (filter === "published") items = items.filter((i) => i.isPublished);
+    let items = studioVideos;
+    if (filter === "published") items = items.filter((i) => i.isPublished);
     else if (filter === "unpublished")
       items = items.filter((i) => !i.isPublished);
 
@@ -117,13 +71,11 @@ export default function StudioLibrary({
       items = items.filter(
         (i) =>
           i.title.toLowerCase().includes(q) ||
-          (i.kind === "music" &&
-            (i as StudioMusic).artist.toLowerCase().includes(q)) ||
           i.genre.toLowerCase().includes(q),
       );
     }
-    return items;
-  }, [allItems, filter, search]);
+    return [...items].sort((a, b) => b.dateAdded - a.dateAdded);
+  }, [studioVideos, filter, search]);
 
   function toggleSelect(id: string) {
     setSelectedIds((prev) => {
@@ -144,8 +96,7 @@ export default function StudioLibrary({
 
   function handleDeleteConfirm() {
     if (!deleteTarget) return;
-    if (deleteTarget.kind === "video") deleteStudioVideo(deleteTarget.id);
-    else deleteStudioMusic(deleteTarget.id);
+    deleteStudioVideo(deleteTarget.id);
     setSelectedIds((prev) => {
       const next = new Set(prev);
       next.delete(deleteTarget.id);
@@ -158,8 +109,7 @@ export default function StudioLibrary({
   function handleBulkDelete() {
     const toDelete = filtered.filter((i) => selectedIds.has(i.id));
     for (const item of toDelete) {
-      if (item.kind === "video") deleteStudioVideo(item.id);
-      else deleteStudioMusic(item.id);
+      deleteStudioVideo(item.id);
     }
     toast.success(`${toDelete.length} item(s) deleted`);
     setSelectedIds(new Set());
@@ -168,24 +118,18 @@ export default function StudioLibrary({
   function handleBulkUnpublish() {
     const toUpdate = filtered.filter((i) => selectedIds.has(i.id));
     for (const item of toUpdate) {
-      if (item.kind === "video")
-        updateStudioVideo(item.id, { isPublished: false });
-      else updateStudioMusic(item.id, { isPublished: false });
+      updateStudioVideo(item.id, { isPublished: false });
     }
     toast.success(`${toUpdate.length} item(s) unpublished`);
     setSelectedIds(new Set());
   }
 
-  function togglePublish(item: LibraryItem) {
+  function togglePublish(item: StudioVideo) {
     const next = !item.isPublished;
-    if (item.kind === "video") {
-      updateStudioVideo(item.id, {
-        isPublished: next,
-        processingStatus: next ? "ready" : "unpublished",
-      });
-    } else {
-      updateStudioMusic(item.id, { isPublished: next });
-    }
+    updateStudioVideo(item.id, {
+      isPublished: next,
+      processingStatus: next ? "ready" : "unpublished",
+    });
     toast.success(
       next ? `"${item.title}" published` : `"${item.title}" unpublished`,
     );
@@ -193,8 +137,6 @@ export default function StudioLibrary({
 
   const filterTabs: { id: FilterType; label: string }[] = [
     { id: "all", label: "All" },
-    { id: "videos", label: "Videos" },
-    { id: "music", label: "Music" },
     { id: "published", label: "Published" },
     { id: "unpublished", label: "Unpublished" },
   ];
@@ -214,14 +156,9 @@ export default function StudioLibrary({
           <h2 className="text-base xl:text-lg font-bold text-foreground">
             Content Library
           </h2>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded-full">
-              {studioVideos.length} videos
-            </span>
-            <span className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded-full">
-              {studioMusic.length} music
-            </span>
-          </div>
+          <span className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded-full">
+            {studioVideos.length} video{studioVideos.length !== 1 ? "s" : ""}
+          </span>
         </div>
 
         {/* Search */}
@@ -230,7 +167,8 @@ export default function StudioLibrary({
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search title, artist, genre..."
+            placeholder="Search title, genre..."
+            data-ocid="studio.search_input"
             className="pl-9 h-9 bg-secondary border-border text-sm"
           />
         </div>
@@ -242,6 +180,7 @@ export default function StudioLibrary({
               type="button"
               key={id}
               onClick={() => setFilter(id)}
+              data-ocid={`studio.filter_${id}.tab`}
               className={`shrink-0 px-3 py-1 rounded-full text-xs font-semibold transition-all ${
                 filter === id
                   ? "bg-purple-500/20 text-purple-400 border border-purple-500/30"
@@ -272,6 +211,7 @@ export default function StudioLibrary({
             size="sm"
             variant="ghost"
             onClick={handleBulkDelete}
+            data-ocid="studio.bulk_delete.button"
             className="h-7 text-xs text-destructive hover:text-destructive px-2"
           >
             Delete
@@ -311,7 +251,10 @@ export default function StudioLibrary({
       {/* List */}
       <div className="flex-1 overflow-y-auto scrollbar-hide">
         {filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-40 text-muted-foreground">
+          <div
+            className="flex flex-col items-center justify-center h-40 text-muted-foreground"
+            data-ocid="studio.empty_state"
+          >
             <Film className="w-8 h-8 mb-2 opacity-30" />
             <p className="text-sm">No content found</p>
           </div>
@@ -329,15 +272,13 @@ export default function StudioLibrary({
               <span className="text-xs text-muted-foreground">Select all</span>
             </div>
 
-            {filtered.map((item) => {
-              const isVideo = item.kind === "video";
-              const audioCount = isVideo
-                ? ((item as StudioVideo).audioTracks?.length ?? 0)
-                : 0;
+            {filtered.map((item, idx) => {
+              const audioCount = item.audioTracks?.length ?? 0;
 
               return (
                 <div
                   key={item.id}
+                  data-ocid={`studio.item.${idx + 1}`}
                   className={`flex items-center gap-3 px-4 lg:px-6 xl:px-8 py-3 hover:bg-secondary/30 transition-colors ${
                     selectedIds.has(item.id) ? "bg-purple-500/5" : ""
                   }`}
@@ -350,19 +291,9 @@ export default function StudioLibrary({
                   />
 
                   {/* Thumbnail */}
-                  <div
-                    className={`shrink-0 rounded overflow-hidden bg-muted ${
-                      isVideo
-                        ? "w-10 h-[60px] lg:w-12 lg:h-[72px] xl:w-16 xl:h-[96px]"
-                        : "w-10 h-10 lg:w-12 lg:h-12 xl:w-16 xl:h-16"
-                    }`}
-                  >
+                  <div className="shrink-0 rounded overflow-hidden bg-muted w-10 h-[60px] lg:w-12 lg:h-[72px] xl:w-16 xl:h-[96px]">
                     <img
-                      src={
-                        isVideo
-                          ? (item as StudioVideo).posterUrl
-                          : (item as StudioMusic).coverArt
-                      }
+                      src={item.posterUrl}
                       alt={item.title}
                       className="w-full h-full object-cover"
                     />
@@ -378,15 +309,11 @@ export default function StudioLibrary({
                         variant="secondary"
                         className="text-[10px] h-4 px-1.5 gap-1"
                       >
-                        {isVideo ? (
-                          <Film className="w-2.5 h-2.5" />
-                        ) : (
-                          <Music className="w-2.5 h-2.5" />
-                        )}
-                        {isVideo ? "Video" : "Music"}
+                        <Film className="w-2.5 h-2.5" />
+                        Video
                       </Badge>
-                      {getStatusBadge(item, item.kind)}
-                      {isVideo && audioCount > 0 && (
+                      {getStatusBadge(item)}
+                      {audioCount > 0 && (
                         <span className="text-[10px] text-muted-foreground">
                           {audioCount} lang
                         </span>
@@ -410,11 +337,6 @@ export default function StudioLibrary({
                     <p className="text-sm font-semibold text-foreground truncate">
                       {item.title}
                     </p>
-                    {item.kind === "music" && (
-                      <p className="text-xs text-muted-foreground truncate mt-0.5">
-                        {(item as StudioMusic).artist}
-                      </p>
-                    )}
                   </div>
 
                   {/* Type — desktop */}
@@ -423,23 +345,19 @@ export default function StudioLibrary({
                       variant="secondary"
                       className="text-[10px] h-5 px-1.5 gap-1"
                     >
-                      {isVideo ? (
-                        <Film className="w-2.5 h-2.5" />
-                      ) : (
-                        <Music className="w-2.5 h-2.5" />
-                      )}
-                      {isVideo ? "Video" : "Music"}
+                      <Film className="w-2.5 h-2.5" />
+                      Video
                     </Badge>
                   </div>
 
                   {/* Status — desktop */}
                   <div className="hidden lg:block w-24 xl:w-28 shrink-0">
-                    {getStatusBadge(item, item.kind)}
+                    {getStatusBadge(item)}
                   </div>
 
                   {/* Lang count — desktop xl */}
                   <div className="hidden xl:block w-16 shrink-0">
-                    {isVideo && audioCount > 0 ? (
+                    {audioCount > 0 ? (
                       <span className="text-xs text-muted-foreground">
                         {audioCount} lang
                       </span>
@@ -466,9 +384,8 @@ export default function StudioLibrary({
                   <div className="flex items-center gap-1 shrink-0 lg:w-24 lg:justify-end">
                     <button
                       type="button"
-                      onClick={() =>
-                        isVideo ? onEditVideo(item.id) : onEditMusic(item.id)
-                      }
+                      onClick={() => onEditVideo(item.id)}
+                      data-ocid={`studio.edit_button.${idx + 1}`}
                       className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors focus-visible:ring-2 focus-visible:ring-primary"
                       aria-label="Edit"
                     >
@@ -492,9 +409,9 @@ export default function StudioLibrary({
                         setDeleteTarget({
                           id: item.id,
                           title: item.title,
-                          kind: item.kind,
                         })
                       }
+                      data-ocid={`studio.delete_button.${idx + 1}`}
                       className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors focus-visible:ring-2 focus-visible:ring-primary"
                       aria-label="Delete"
                     >

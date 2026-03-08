@@ -1,13 +1,6 @@
 import { useApp } from "@/AppContext";
-import { seedStudioMusic, seedStudioVideos } from "@/mockData";
-import {
-  BarChart2,
-  Film,
-  Globe,
-  Music,
-  TrendingUp,
-  Upload,
-} from "lucide-react";
+import { seedStudioVideos } from "@/mockData";
+import { BarChart2, Film, Globe, TrendingUp, Upload } from "lucide-react";
 import { useMemo } from "react";
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
@@ -16,11 +9,11 @@ const WEEKLY_VIEWS = [1200, 1850, 1400, 2100, 1750, 2800, 2400];
 const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 const TOP_CONTENT = [
-  { id: "sv1", title: "Stellar Odyssey", type: "video" as const, views: 18400 },
-  { id: "sv2", title: "Gravity's Edge", type: "video" as const, views: 15200 },
-  { id: "sm1", title: "Cosmic Drift", type: "music" as const, views: 12800 },
-  { id: "sv3", title: "Dark Matter", type: "video" as const, views: 9600 },
-  { id: "sm2", title: "Solar Winds", type: "music" as const, views: 7300 },
+  { id: "sv1", title: "Stellar Odyssey", views: 18400 },
+  { id: "sv2", title: "Gravity's Edge", views: 15200 },
+  { id: "sv3", title: "Dark Matter", views: 9600 },
+  { id: "sv4", title: "Nebula Station S1", views: 8100 },
+  { id: "sv5", title: "The Mars Chronicles", views: 6200 },
 ];
 
 const MOCK_DOWNLOADS = 1247;
@@ -145,7 +138,7 @@ function TopContentList() {
     <div className="rounded-xl border border-border bg-card p-4 lg:p-5">
       <div className="flex items-center gap-2 mb-4">
         <BarChart2 className="w-4 h-4 text-purple-400" />
-        <h3 className="text-sm font-semibold text-foreground">Top 5 Content</h3>
+        <h3 className="text-sm font-semibold text-foreground">Top 5 Videos</h3>
       </div>
       <div className="space-y-3">
         {TOP_CONTENT.map((item, i) => {
@@ -160,11 +153,7 @@ function TopContentList() {
                 #{i + 1}
               </span>
               <div className="w-6 h-6 shrink-0 rounded-md bg-secondary flex items-center justify-center">
-                {item.type === "video" ? (
-                  <Film className="w-3 h-3 text-purple-400" />
-                ) : (
-                  <Music className="w-3 h-3 text-violet-400" />
-                )}
+                <Film className="w-3 h-3 text-purple-400" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between mb-1">
@@ -206,9 +195,6 @@ export default function StudioAnalyticsTab() {
     for (const v of seedStudioVideos) {
       counts[v.genre] = (counts[v.genre] ?? 0) + 1;
     }
-    for (const m of seedStudioMusic) {
-      counts[m.genre] = (counts[m.genre] ?? 0) + 1;
-    }
     const total = Object.values(counts).reduce((a, b) => a + b, 0);
     return Object.entries(counts)
       .map(([genre, count]) => ({
@@ -237,12 +223,10 @@ export default function StudioAnalyticsTab() {
     };
   }, []);
 
-  const totalPublished =
-    seedStudioVideos.filter((v) => v.isPublished).length +
-    seedStudioMusic.filter((m) => m.isPublished).length;
+  const totalPublished = seedStudioVideos.filter((v) => v.isPublished).length;
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-background">
+    <div className="flex flex-col h-full overflow-hidden bg-transparent">
       {/* Header */}
       <div
         className="flex items-center justify-between px-4 lg:px-6 xl:px-8 py-3 xl:py-4 border-b border-border shrink-0"
@@ -268,6 +252,7 @@ export default function StudioAnalyticsTab() {
         <button
           type="button"
           onClick={() => setActiveTab("studio")}
+          data-ocid="analytics.go_to_studio.button"
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-purple-500/30 text-purple-400 hover:bg-purple-500/10 transition-colors"
         >
           Go to Studio
@@ -286,16 +271,11 @@ export default function StudioAnalyticsTab() {
       <div className="flex-1 overflow-y-auto scrollbar-hide">
         <div className="px-4 lg:px-6 xl:px-8 py-4 lg:py-6 space-y-5 max-w-5xl mx-auto">
           {/* Stat Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
             <StatCard
               icon={Film}
               label="Total Videos"
               value={seedStudioVideos.length}
-            />
-            <StatCard
-              icon={Music}
-              label="Total Music"
-              value={seedStudioMusic.length}
             />
             <StatCard
               icon={BarChart2}
@@ -383,6 +363,7 @@ export default function StudioAnalyticsTab() {
               <button
                 type="button"
                 onClick={() => setActiveTab("studio")}
+                data-ocid="analytics.go_to_library.button"
                 className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
               >
                 <Film className="w-3.5 h-3.5" />
@@ -391,10 +372,11 @@ export default function StudioAnalyticsTab() {
               <button
                 type="button"
                 onClick={() => setActiveTab("studio")}
+                data-ocid="analytics.upload_content.button"
                 className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-purple-600 hover:bg-purple-700 text-white transition-colors"
               >
                 <Upload className="w-3.5 h-3.5" />
-                Upload Content
+                Upload Video
               </button>
             </div>
           </div>

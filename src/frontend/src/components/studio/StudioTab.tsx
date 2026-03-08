@@ -1,24 +1,14 @@
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Clapperboard, Film, Library, Music, Plus } from "lucide-react";
+import { Clapperboard, Film, Library, Plus } from "lucide-react";
 import { useState } from "react";
-import StudioEditMusic from "./StudioEditMusic";
 import StudioEditVideo from "./StudioEditVideo";
 import StudioLibrary from "./StudioLibrary";
-import StudioUploadMusic from "./StudioUploadMusic";
 import StudioUploadVideo from "./StudioUploadVideo";
 
 type StudioView =
   | { screen: "library" }
   | { screen: "upload-video" }
-  | { screen: "upload-music" }
-  | { screen: "edit-video"; id: string }
-  | { screen: "edit-music"; id: string };
+  | { screen: "edit-video"; id: string };
 
 export default function StudioTab() {
   const [view, setView] = useState<StudioView>({ screen: "library" });
@@ -28,7 +18,7 @@ export default function StudioTab() {
   const isLibrary = view.screen === "library";
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-background">
+    <div className="flex flex-col h-full overflow-hidden bg-transparent">
       {/* Studio Top Bar */}
       {isLibrary && (
         <div
@@ -53,36 +43,16 @@ export default function StudioTab() {
           </div>
 
           <div className="flex items-center gap-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  size="sm"
-                  className="h-8 xl:h-9 text-xs xl:text-sm gap-1.5 bg-purple-600 hover:bg-purple-700 text-white border-0"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  Upload
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                className="bg-card border-border"
-              >
-                <DropdownMenuItem
-                  onClick={() => setView({ screen: "upload-video" })}
-                  className="gap-2 text-sm"
-                >
-                  <Film className="w-4 h-4 text-purple-400" />
-                  Upload Video
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => setView({ screen: "upload-music" })}
-                  className="gap-2 text-sm"
-                >
-                  <Music className="w-4 h-4 text-purple-400" />
-                  Upload Music
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Button
+              size="sm"
+              onClick={() => setView({ screen: "upload-video" })}
+              data-ocid="studio.upload.button"
+              className="h-8 xl:h-9 text-xs xl:text-sm gap-1.5 bg-purple-600 hover:bg-purple-700 text-white border-0"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <Film className="w-3.5 h-3.5" />
+              Upload Video
+            </Button>
           </div>
         </div>
       )}
@@ -102,20 +72,13 @@ export default function StudioTab() {
         {view.screen === "library" && (
           <StudioLibrary
             onEditVideo={(id) => setView({ screen: "edit-video", id })}
-            onEditMusic={(id) => setView({ screen: "edit-music", id })}
           />
         )}
         {view.screen === "upload-video" && (
           <StudioUploadVideo onBack={goLibrary} />
         )}
-        {view.screen === "upload-music" && (
-          <StudioUploadMusic onBack={goLibrary} />
-        )}
         {view.screen === "edit-video" && (
           <StudioEditVideo id={view.id} onBack={goLibrary} />
-        )}
-        {view.screen === "edit-music" && (
-          <StudioEditMusic id={view.id} onBack={goLibrary} />
         )}
       </div>
     </div>
